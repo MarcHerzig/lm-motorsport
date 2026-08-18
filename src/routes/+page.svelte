@@ -70,7 +70,7 @@
 <section class="section text-center">
   <span class="eyebrow">Warum LM Motorsport?</span>
   <p class="text-xl md:text-2xl max-w-3xl mx-auto mt-4 leading-relaxed">
-    Wir sind keine anonyme Grossgarage, sondern zwei Autobegeisterte mit echtem Fachwissen und
+    Wir sind keine anonyme Grossgarage, sondern zwei Spezialisten mit echtem Fachwissen und
     Motorsport im Blut. Bei uns bekommst du eine ehrliche Meinung – auch wenn sie mal lautet:
     „Finger weg von diesem Auto." Genau das ist der Punkt.
   </p>
