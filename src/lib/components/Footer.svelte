@@ -6,7 +6,7 @@
 <footer class="border-t border-border mt-24">
   <div class="max-w-6xl mx-auto px-6 py-12 grid gap-10 md:grid-cols-3">
     <div>
-      <img src="/brand/logo.png" alt={site.legalName} class="h-7 w-auto mb-3" />
+      <img src="/brand/logo.png?v=2" alt={site.legalName} class="h-7 w-auto mb-3" />
       <p class="text-muted text-sm leading-relaxed">
         Auto suchen, prüfen, warten – alles aus einer Hand. Persönlich, ehrlich und mit Benzin im Blut.
       </p>

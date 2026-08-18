@@ -8,7 +8,7 @@
 <header class="border-b border-border sticky top-0 z-30 bg-bg/95 backdrop-blur">
   <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
     <a href="/" class="flex items-center">
-      <img src="/brand/logo.png" alt={site.legalName} class="h-8 md:h-9 w-auto" />
+      <img src="/brand/logo.png?v=2" alt={site.legalName} class="h-8 md:h-9 w-auto" />
     </a>
 
     <nav class="hidden md:flex items-center gap-8 font-heading uppercase text-sm tracking-wide">
