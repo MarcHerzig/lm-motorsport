@@ -38,7 +38,7 @@ export const actions = {
 
     try {
       await transporter.sendMail({
-        from: `"LM Motorsport Website" <${env.SMTP_USER}>`,
+        from: `"LM Motorsport Website" <${env.CONTACT_TO_EMAIL}>`,
         to: env.CONTACT_TO_EMAIL,
         replyTo: email,
         subject: `Neue Anfrage (${service || 'Sonstiges'}) von ${name}`,
