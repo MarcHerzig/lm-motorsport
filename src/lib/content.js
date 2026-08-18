@@ -57,7 +57,7 @@ export const services = [
     teaser:
       'Ein konkretes Auto im Blick? Wir fahren hin, prüfen es fachmännisch und sagen dir ehrlich, was es taugt – inklusive Zustandsbericht.',
     image: images.checker,
-    priceFrom: 'ab CHF 180 pro Besichtigung (zzgl. Anfahrt)',
+    priceFrom: 'ab CHF 580 pro Besichtigung (zzgl. Anfahrt)',
     checks: [
       { title: 'Technik', text: 'Motor, Getriebe, Bremsen, Fahrwerk, Elektronik.' },
       { title: 'Karosserie & Optik', text: 'Roststellen, Unfallspuren, Lack, Zustand.' },
@@ -78,9 +78,9 @@ export const services = [
     teaser:
       'Reifenwechsel, Ölwechsel und kleine Wartungsarbeiten – schnell, sauber und zu fairen Preisen.',
     image: images.pitstop,
-    priceFrom: 'Reifenwechsel ab CHF 40, Ölwechsel ab CHF 90',
+    priceFrom: 'Reifenwechsel ab CHF 100, Ölwechsel ab CHF 150',
     offerings: [
-      'Reifenwechsel (Sommer/Winter), inkl. Einlagerung auf Wunsch',
+      'Reifenwechsel (Sommer/Winter)',
       'Ölwechsel und Flüssigkeitskontrolle',
       'Kleine Wartung und Checks vor der grossen Fahrt',
       'Aufbereitung und Pflege'
