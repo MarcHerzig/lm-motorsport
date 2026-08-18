@@ -8,8 +8,8 @@ export default {
         border: '#2a2d33',
         ink: '#f5f5f3',
         muted: '#9ca0a8',
-        accent: '#e10600',
-        'accent-hover': '#ff241a'
+        accent: '#8b9199',
+        'accent-hover': '#aab0b8'
       },
       fontFamily: {
         heading: ['Oswald', 'sans-serif'],
