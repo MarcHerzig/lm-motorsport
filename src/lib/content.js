@@ -11,8 +11,8 @@ export const site = {
 
 export const images = {
   hero: 'https://images.unsplash.com/photo-1597849428022-92605a5e5309?q=80&w=1920&auto=format&fit=crop',
-  finder: 'https://images.unsplash.com/photo-1624914261154-061edb25385e?q=80&w=1600&auto=format&fit=crop',
-  checker: 'https://images.unsplash.com/photo-1552982070-5c7588fa46ec?q=80&w=1600&auto=format&fit=crop',
+  finder: 'https://images.unsplash.com/photo-1743889291827-1f26f6820e30?q=80&w=1600&auto=format&fit=crop',
+  checker: 'https://images.unsplash.com/photo-1601465621041-643db9cc051d?q=80&w=1600&auto=format&fit=crop',
   pitstop: 'https://images.unsplash.com/photo-1645445522156-9ac06bc7a767?q=80&w=1600&auto=format&fit=crop',
   brands: {
     audi: 'https://images.unsplash.com/photo-1532974143451-8162d38a1257?q=80&w=800&auto=format&fit=crop',
