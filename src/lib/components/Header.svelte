@@ -7,9 +7,8 @@
 
 <header class="border-b border-border sticky top-0 z-30 bg-bg/95 backdrop-blur">
   <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-2 font-heading text-xl tracking-wide">
-      <span class="inline-block w-3 h-6 bg-accent -skew-x-12"></span>
-      {site.name}
+    <a href="/" class="flex items-center">
+      <img src="/brand/logo.png" alt={site.legalName} class="h-8 md:h-9 w-auto" />
     </a>
 
     <nav class="hidden md:flex items-center gap-8 font-heading uppercase text-sm tracking-wide">
