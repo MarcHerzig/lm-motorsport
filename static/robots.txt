@@ -1,4 +1,4 @@
-# Staging-Umgebung (lm-motorsport.maegu.be) — bewusst nicht indexierbar.
-# Beim Umzug auf lm-motorsport.ch durch "Allow: /" + Sitemap-Eintrag ersetzen.
 User-agent: *
-Disallow: /
+Allow: /
+
+Sitemap: https://lm-motorsport.ch/sitemap.xml
