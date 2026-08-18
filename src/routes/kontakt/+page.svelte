@@ -132,6 +132,7 @@
   </div>
 
   <aside class="card h-fit">
+    <img src="/brand/logo.png" alt={site.legalName} class="h-7 w-auto mb-5" />
     <h2 class="text-xl mb-4 normal-case">Direkter Kontakt</h2>
     <ul class="space-y-3 text-sm">
       <li><span class="text-muted block">E-Mail</span><a href={`mailto:${site.email}`} class="hover:text-accent">{site.email}</a></li>
