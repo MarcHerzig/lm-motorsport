@@ -1,0 +1,40 @@
+@import '@fontsource/oswald/400.css';
+@import '@fontsource/oswald/600.css';
+@import '@fontsource/oswald/700.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-bg text-ink font-body;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading uppercase tracking-wide;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-block bg-accent hover:bg-accent-hover text-white font-heading uppercase tracking-wide py-3 px-7 rounded-sm transition-colors;
+  }
+  .btn-ghost {
+    @apply inline-block border border-border hover:border-muted text-ink font-heading uppercase tracking-wide py-3 px-7 rounded-sm transition-colors;
+  }
+  .card {
+    @apply bg-surface border border-border rounded-md p-6;
+  }
+  .eyebrow {
+    @apply text-accent font-heading uppercase tracking-[0.2em] text-sm;
+  }
+  .section {
+    @apply max-w-6xl mx-auto px-6 py-16 md:py-24;
+  }
+}
