@@ -52,13 +52,12 @@
       <h2>Verkäufer</h2>
       <div class="kv-grid">
         <p class="kv-field"><label for="v-name">Name</label><input id="v-name" type="text" /></p>
-        <p class="kv-field"><label for="v-gebdat">Geburtsdatum</label><input id="v-gebdat" type="text" /></p>
         <p class="kv-field"><label for="v-vorname">Vorname</label><input id="v-vorname" type="text" /></p>
-        <p class="kv-field"><label for="v-tel">Telefonnummer</label><input id="v-tel" type="text" /></p>
         <p class="kv-field"><label for="v-adresse">Wohnadresse</label><input id="v-adresse" type="text" /></p>
-        <p class="kv-field"><label for="v-mail">E-Mail</label><input id="v-mail" type="text" /></p>
         <p class="kv-field"><label for="v-plz">PLZ / Ort</label><input id="v-plz" type="text" /></p>
-        <div class="kv-field">
+        <p class="kv-field"><label for="v-tel">Telefonnummer</label><input id="v-tel" type="text" /></p>
+        <p class="kv-field"><label for="v-mail">E-Mail</label><input id="v-mail" type="text" /></p>
+        <div class="kv-field kv-span2">
           <span class="kv-label">Verkäufer ist rechtmässiger Eigentümer</span>
           <span class="kv-choices kv-choices-pad">
             <span class="kv-choice"><input type="checkbox" id="v-eig-ja" /><label for="v-eig-ja">ja</label></span>
@@ -72,12 +71,11 @@
       <h2>Käufer</h2>
       <div class="kv-grid">
         <p class="kv-field"><label for="k-name">Name</label><input id="k-name" type="text" /></p>
-        <p class="kv-field"><label for="k-gebdat">Geburtsdatum</label><input id="k-gebdat" type="text" /></p>
         <p class="kv-field"><label for="k-vorname">Vorname</label><input id="k-vorname" type="text" /></p>
-        <p class="kv-field"><label for="k-tel">Telefonnummer</label><input id="k-tel" type="text" /></p>
         <p class="kv-field"><label for="k-adresse">Wohnadresse</label><input id="k-adresse" type="text" /></p>
-        <p class="kv-field"><label for="k-mail">E-Mail</label><input id="k-mail" type="text" /></p>
         <p class="kv-field"><label for="k-plz">PLZ / Ort</label><input id="k-plz" type="text" /></p>
+        <p class="kv-field"><label for="k-tel">Telefonnummer</label><input id="k-tel" type="text" /></p>
+        <p class="kv-field"><label for="k-mail">E-Mail</label><input id="k-mail" type="text" /></p>
       </div>
     </div>
 
@@ -96,8 +94,6 @@
         <p class="kv-field"><label for="f-km">Kilometerstand</label><input id="f-km" type="text" /></p>
         <p class="kv-field"><label for="f-leistung">Leistung</label><input id="f-leistung" type="text" /></p>
         <p class="kv-field"><label for="f-mfk">Datum der letzten MFK-Prüfung</label><input id="f-mfk" type="text" /></p>
-        <p class="kv-field"><label for="f-treibstoff">Treibstoff / Antrieb</label><input id="f-treibstoff" type="text" /></p>
-        <p class="kv-field"><label for="f-abgas">Datum des nächsten Abgastests</label><input id="f-abgas" type="text" /></p>
       </div>
       <p class="kv-note">Die meisten dieser Angaben stehen im Fahrzeugausweis.</p>
     </div>
@@ -106,7 +102,6 @@
       <h2>Verkaufspreis</h2>
       <div class="kv-grid">
         <p class="kv-field"><label for="p-chf">Kaufpreis in CHF</label><input id="p-chf" type="text" /></p>
-        <p class="kv-field"><label for="p-worte">Betrag in Worten</label><input id="p-worte" type="text" /></p>
         <p class="kv-field"><label for="p-anzahlung">Anzahlung in CHF (falls vereinbart)</label><input id="p-anzahlung" type="text" /></p>
         <p class="kv-field"><label for="p-rest">Restbetrag bei Übergabe in CHF</label><input id="p-rest" type="text" /></p>
         <p class="kv-field kv-span2">
@@ -149,41 +144,41 @@
     <div class="kv-section">
       <h2>Weitere Angaben zum Fahrzeug</h2>
 
-      <div class="kv-qrow">
-        <span class="kv-question">Ist das Fahrzeug unfallfrei (nur allfällige Bagatellschäden wie Kratzer o. ä.)?</span>
-        <span class="kv-choices">
-          <span class="kv-choice"><input type="checkbox" id="w-unfall-ja" /><label for="w-unfall-ja">ja</label></span>
-          <span class="kv-choice"><input type="checkbox" id="w-unfall-nein" /><label for="w-unfall-nein">nein</label></span>
-        </span>
+      <div class="kv-qlist">
+        <div class="kv-qrow">
+          <span class="kv-question">Ist das Fahrzeug unfallfrei (nur allfällige Bagatellschäden wie Kratzer o. ä.)?</span>
+          <span class="kv-choices">
+            <span class="kv-choice"><input type="checkbox" id="w-unfall-ja" /><label for="w-unfall-ja">ja</label></span>
+            <span class="kv-choice"><input type="checkbox" id="w-unfall-nein" /><label for="w-unfall-nein">nein</label></span>
+          </span>
+        </div>
+        <div class="kv-qrow">
+          <span class="kv-question">Sind Mängel am Fahrzeug bekannt?</span>
+          <span class="kv-choices">
+            <span class="kv-choice"><input type="checkbox" id="w-maengel-ja" /><label for="w-maengel-ja">ja</label></span>
+            <span class="kv-choice"><input type="checkbox" id="w-maengel-nein" /><label for="w-maengel-nein">nein</label></span>
+          </span>
+        </div>
+        <div class="kv-qrow">
+          <span class="kv-question">Ist das Serviceheft vorhanden und korrekt nachgeführt?</span>
+          <span class="kv-choices">
+            <span class="kv-choice"><input type="checkbox" id="w-heft-ja" /><label for="w-heft-ja">ja</label></span>
+            <span class="kv-choice"><input type="checkbox" id="w-heft-nein" /><label for="w-heft-nein">nein</label></span>
+          </span>
+        </div>
+        <div class="kv-qrow">
+          <span class="kv-question">Wurde das Fahrzeug getunt oder technisch verändert (Eintrag im Fahrzeugausweis)?</span>
+          <span class="kv-choices">
+            <span class="kv-choice"><input type="checkbox" id="w-tuning-ja" /><label for="w-tuning-ja">ja</label></span>
+            <span class="kv-choice"><input type="checkbox" id="w-tuning-nein" /><label for="w-tuning-nein">nein</label></span>
+          </span>
+        </div>
       </div>
-      <p class="kv-field"><label for="w-unfall-bem">Bemerkungen</label><textarea id="w-unfall-bem" rows="2"></textarea></p>
 
-      <div class="kv-qrow">
-        <span class="kv-question">Sind Mängel am Fahrzeug bekannt?</span>
-        <span class="kv-choices">
-          <span class="kv-choice"><input type="checkbox" id="w-maengel-ja" /><label for="w-maengel-ja">ja</label></span>
-          <span class="kv-choice"><input type="checkbox" id="w-maengel-nein" /><label for="w-maengel-nein">nein</label></span>
-        </span>
-      </div>
-      <p class="kv-field"><label for="w-maengel-bem">Bemerkungen</label><textarea id="w-maengel-bem" rows="2"></textarea></p>
-
-      <div class="kv-qrow">
-        <span class="kv-question">Ist das Serviceheft vorhanden und korrekt nachgeführt?</span>
-        <span class="kv-choices">
-          <span class="kv-choice"><input type="checkbox" id="w-heft-ja" /><label for="w-heft-ja">ja</label></span>
-          <span class="kv-choice"><input type="checkbox" id="w-heft-nein" /><label for="w-heft-nein">nein</label></span>
-        </span>
-      </div>
-      <p class="kv-field"><label for="w-heft-bem">Bemerkungen</label><textarea id="w-heft-bem" rows="2"></textarea></p>
-
-      <div class="kv-qrow">
-        <span class="kv-question">Wurde das Fahrzeug getunt oder technisch verändert (Eintrag im Fahrzeugausweis)?</span>
-        <span class="kv-choices">
-          <span class="kv-choice"><input type="checkbox" id="w-tuning-ja" /><label for="w-tuning-ja">ja</label></span>
-          <span class="kv-choice"><input type="checkbox" id="w-tuning-nein" /><label for="w-tuning-nein">nein</label></span>
-        </span>
-      </div>
-      <p class="kv-field"><label for="w-tuning-bem">Bemerkungen</label><textarea id="w-tuning-bem" rows="2"></textarea></p>
+      <p class="kv-field kv-remarks">
+        <label for="w-bemerkungen">Generelle Bemerkungen</label>
+        <textarea id="w-bemerkungen" rows="6"></textarea>
+      </p>
     </div>
 
     <div class="kv-section">
@@ -214,13 +209,17 @@
       </div>
       <div class="kv-opt">
         <input type="checkbox" id="z-bank" />
-        <label for="z-bank">Banküberweisung; die Übergabe erfolgt nach Gutschrift des vollen Kaufpreises.</label>
+        <label for="z-bank">Banküberweisung.</label>
       </div>
       <div class="kv-opt">
         <input type="checkbox" id="z-sonst" />
         <label for="z-sonst" class="kv-nowrap">Sonstige Zahlungsart</label>
         <input type="text" id="z-sonst-txt" class="kv-inline" aria-label="Sonstige Zahlungsart" />
       </div>
+      <p class="kv-clause">
+        Die Übergabe des Fahrzeugs erfolgt in jedem Fall erst, wenn der volle Kaufpreis beim
+        Verkäufer eingegangen ist.
+      </p>
 
       <h3 class="kv-h3-gap">Fahrzeugübergabe</h3>
       <div class="kv-grid">
@@ -231,21 +230,6 @@
         Nutzen und Gefahr gehen mit der Übergabe des Fahrzeugs auf den Käufer über. Der Käufer
         bestätigt mit seiner Unterschrift, das Fahrzeug besichtigt und probegefahren zu haben.
       </p>
-
-      <dl class="kv-legal">
-        <dt>Anwendbares Recht</dt>
-        <dd>Im Übrigen finden die gesetzlichen Bestimmungen über den Kaufvertrag (Art. 184 ff. OR) Anwendung.</dd>
-        <dt>Salvatorische Klausel</dt>
-        <dd>
-          Sollte eine Bestimmung dieses Vertrages unwirksam sein, tritt an ihre Stelle die
-          gesetzliche Regelung. Die übrigen Bestimmungen bleiben wirksam.
-        </dd>
-        <dt>Ausfertigungen</dt>
-        <dd>
-          Dieser Vertrag wird zweifach ausgefertigt; Verkäufer und Käufer erhalten je ein
-          unterzeichnetes Exemplar.
-        </dd>
-      </dl>
     </div>
 
     <div class="kv-section">
@@ -513,12 +497,29 @@
     outline-offset: 1px;
   }
 
+  /* Vier Ja/Nein-Fragen als kompakte Liste mit Trennlinien statt Bemerkungsfeldern */
+  .kv-qlist {
+    border-top: 0.6pt solid var(--hairline);
+    margin-bottom: 5mm;
+  }
   .kv-qrow {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 6mm;
-    margin-bottom: 2mm;
+    padding: 2.6mm 0;
+    border-bottom: 0.6pt solid var(--hairline);
+  }
+  .kv-remarks textarea {
+    min-height: 26mm;
+  }
+  .kv-clause {
+    font-size: 9.5pt;
+    line-height: 1.45;
+    color: var(--ink);
+    margin: 3mm 0 0;
+    padding-left: 3mm;
+    border-left: 1.2pt solid var(--silver);
   }
   .kv-question {
     font-size: 9.5pt;
@@ -548,27 +549,6 @@
     padding: 0.8mm 1.5mm;
     flex: 1;
     width: auto;
-  }
-
-  .kv-legal {
-    display: grid;
-    grid-template-columns: 32mm 1fr;
-    column-gap: 5mm;
-    row-gap: 2.5mm;
-    font-size: 8.5pt;
-    line-height: 1.45;
-    border-top: 0.6pt solid var(--hairline);
-    padding-top: 3.5mm;
-    margin: 4mm 0 0;
-  }
-  .kv-legal dt {
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    color: var(--ink);
-  }
-  .kv-legal dd {
-    margin: 0;
-    color: var(--ink-soft);
   }
 
   .kv-signatures {
@@ -625,13 +605,6 @@
     .kv-grid,
     .kv-signatures {
       grid-template-columns: 1fr;
-    }
-    .kv-legal {
-      grid-template-columns: 1fr;
-      row-gap: 0.5mm;
-    }
-    .kv-legal dd {
-      margin-bottom: 2.5mm;
     }
     .kv-qrow {
       flex-direction: column;
