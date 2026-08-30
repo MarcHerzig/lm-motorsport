@@ -866,8 +866,11 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* ---------- Schmale Viewports ---------- */
-  @media (max-width: 820px) {
+  /* ---------- Schmale Viewports ----------
+     Zwingend `screen`: eine A4-Seite ist im Druck rund 794px breit, ohne die
+     Einschraenkung wuerde der Druck in dieser Handy-Ansicht landen und alles
+     einspaltig untereinander setzen. */
+  @media screen and (max-width: 820px) {
     .kv-stage {
       padding: 0 12px 48px;
     }
@@ -954,6 +957,25 @@
     .kv-sheet:last-child {
       break-after: auto;
       page-break-after: auto;
+    }
+    /* Das Blatt behaelt im Druck exakt die Bildschirmaufteilung */
+    .kv-sheet {
+      padding: 14mm 16mm 12mm;
+    }
+    .kv-masthead {
+      margin: -14mm -16mm 9mm;
+      padding: 9mm 16mm 8mm;
+    }
+    .kv-slim {
+      padding-top: 7mm;
+      padding-bottom: 6mm;
+    }
+    .kv-grid,
+    .kv-signatures {
+      grid-template-columns: 1fr 1fr;
+    }
+    .kv-qrow {
+      flex-direction: row;
     }
     /* Eingabefelder raus, Textabbild rein */
     .kv-sheet input[type='text'],
