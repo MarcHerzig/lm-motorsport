@@ -18,12 +18,33 @@
   let fehler = '';
   let laeuft = false;
 
-  function drucken() {
-    window.print();
-  }
-
   function felder() {
     return [...formEl.elements].filter((el) => el.name);
+  }
+
+  // Browser drucken den getippten Inhalt von input/textarea unzuverlaessig
+  // (bei textarea praktisch nie). Darum bekommt jedes Feld vor dem Druck ein
+  // Text-Element mit demselben Wert und derselben Hoehe; im Druck wird das
+  // Eingabefeld aus- und dieses eingeblendet.
+  function wertSpiegeln(el) {
+    let spiegel = el.nextElementSibling;
+    if (!spiegel || !spiegel.classList.contains('kv-wert')) {
+      spiegel = document.createElement('span');
+      spiegel.className = 'kv-wert' + (el.classList.contains('kv-inline') ? ' kv-wert-inline' : '');
+      el.after(spiegel);
+    }
+    spiegel.textContent = el.value;
+    spiegel.style.minHeight = `${el.offsetHeight}px`;
+  }
+
+  function werteSpiegeln() {
+    if (!formEl) return;
+    for (const el of felder()) if (el.type !== 'checkbox') wertSpiegeln(el);
+  }
+
+  function drucken() {
+    werteSpiegeln();
+    window.print();
   }
 
   function daten() {
@@ -165,6 +186,10 @@
       codeEingabe = ausUrl;
       oeffnenOffen = true;
     }
+
+    // Auch fuer Strg+P statt des Buttons
+    window.addEventListener('beforeprint', werteSpiegeln);
+    return () => window.removeEventListener('beforeprint', werteSpiegeln);
   });
 </script>
 
@@ -179,15 +204,6 @@
 <section class="section max-w-6xl kv-intro">
   <span class="eyebrow">Werkzeug</span>
   <h1 class="text-4xl md:text-5xl mt-2 mb-6">Kaufvertrag</h1>
-  <div class="max-w-2xl text-muted leading-relaxed">
-    <p>
-      Vorlage für den privaten Fahrzeugverkauf in der Schweiz — zwei Seiten, alles drin, was in den
-      Vertrag gehört. Direkt hier ausfüllen, als PDF speichern oder leer ausdrucken und von Hand
-      ergänzen. Wer den Vertrag später weiterbearbeiten will, speichert ihn und bekommt dafür einen
-      sechsstelligen Abruf-Code.
-    </p>
-  </div>
-
   <div class="mt-8 flex flex-wrap gap-4">
     <button type="button" class="btn-primary" on:click={drucken}>Als PDF speichern / drucken</button>
 
@@ -290,11 +306,6 @@
     <p class="mt-5 text-sm text-red-400">{fehler}</p>
   {/if}
 
-  <p class="mt-6 text-xs text-muted max-w-2xl">
-    Tipp für ein sauberes PDF: im Druckdialog Ziel „Als PDF speichern", Ränder „Keine" und
-    „Hintergrundgrafiken" aktivieren. Gespeicherte Verträge liegen auf dem Server von {site.name}
-    und werden nach einem Jahr ohne Änderung automatisch gelöscht.
-  </p>
 </section>
 
 <form id="kaufvertrag" class="kv-stage" bind:this={formEl} on:submit|preventDefault>
@@ -884,9 +895,37 @@
     margin: 0;
   }
 
+  /* Textabbild eines Eingabefelds — nur im Druck sichtbar, siehe wertSpiegeln().
+     Die Elemente entstehen zur Laufzeit und tragen darum keine Svelte-Klasse,
+     deshalb :global(). */
+  :global(.kv-wert) {
+    display: none;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 10pt;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.35;
+    color: var(--ink);
+    border-bottom: 0.6pt solid var(--hairline);
+    padding: 1.6mm 2mm;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  :global(.kv-wert-inline) {
+    flex: 1;
+    font-size: 9.5pt;
+    padding: 0.8mm 1.5mm;
+  }
+
   @media print {
     :global(body) {
       background: #fff !important;
+      margin: 0 !important;
+    }
+    /* Die Layout-Huelle spannt sonst eine volle Bildschirmhoehe auf und
+       erzeugt eine leere erste Seite. */
+    :global(.app-shell) {
+      display: block !important;
+      min-height: 0 !important;
     }
     :global(header),
     :global(footer),
@@ -903,8 +942,10 @@
     }
     .kv-sheet {
       width: 210mm;
-      height: 297mm;
-      min-height: 0;
+      /* min-height statt height: laeuft ein Blatt einmal ueber, wird der Rest
+         auf eine Folgeseite geschoben statt abgeschnitten. */
+      min-height: 296mm;
+      height: auto;
       max-width: none;
       box-shadow: none;
       break-after: page;
@@ -914,9 +955,16 @@
       break-after: auto;
       page-break-after: auto;
     }
-    .kv-sheet input,
+    /* Eingabefelder raus, Textabbild rein */
+    .kv-sheet input[type='text'],
     .kv-sheet textarea {
-      background: var(--fill) !important;
+      display: none !important;
+    }
+    :global(.kv-wert) {
+      display: block !important;
+    }
+    :global(.kv-wert-inline) {
+      display: inline-block !important;
     }
     .kv-sheet,
     .kv-sheet * {

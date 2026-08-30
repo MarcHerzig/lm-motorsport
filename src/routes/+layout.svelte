@@ -5,7 +5,7 @@
   import CookieBanner from '$lib/components/CookieBanner.svelte';
 </script>
 
-<div class="flex flex-col min-h-screen">
+<div class="app-shell flex flex-col min-h-screen">
   <Header />
   <main class="grow">
     <slot />
