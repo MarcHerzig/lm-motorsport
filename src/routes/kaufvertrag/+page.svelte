@@ -514,9 +514,8 @@
 
     <div class="kv-foot">
       <div>
-        Diese Vertragsvorlage wird von {site.name} zur Verfügung gestellt. {site.name} ist an der
-        vertraglichen Beziehung zwischen Verkäufer und Käufer nicht beteiligt und übernimmt keine
-        Verantwortung für Abschluss, Inhalt oder Erfüllung dieses Vertrages.<br />
+        {site.name} stellt diese Vorlage zur Verfügung, ist an der Vereinbarung zwischen Verkäufer
+        und Käufer aber nicht beteiligt und übernimmt keine Verantwortung für Inhalt und Erfüllung.<br />
         {site.name} &middot; lm-motorsport.ch &middot; {site.email}
       </div>
       <div class="kv-pageno">2/2</div>
@@ -646,10 +645,10 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink);
-    margin: 0 0 1.5mm;
+    margin: 0 0 1.2mm;
   }
   .kv-h3-gap {
-    margin-top: 3.5mm !important;
+    margin-top: 2.5mm !important;
   }
 
   .kv-grid {
@@ -723,8 +722,8 @@
   .kv-note {
     font-size: 7.5pt;
     color: var(--ink-soft);
-    margin: 2mm 0 0;
-    line-height: 1.5;
+    margin: 1.5mm 0 0;
+    line-height: 1.4;
   }
 
   .kv-choices {
@@ -775,24 +774,24 @@
   /* Vier Ja/Nein-Fragen als kompakte Liste mit Trennlinien statt Bemerkungsfeldern */
   .kv-qlist {
     border-top: 0.6pt solid var(--hairline);
-    margin-bottom: 5mm;
+    margin-bottom: 3.5mm;
   }
   .kv-qrow {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 6mm;
-    padding: 1.8mm 0;
+    padding: 1.4mm 0;
     border-bottom: 0.6pt solid var(--hairline);
   }
   .kv-remarks textarea {
-    min-height: 15mm;
+    min-height: 12mm;
   }
   .kv-clause {
     font-size: 9.5pt;
-    line-height: 1.45;
+    line-height: 1.35;
     color: var(--ink);
-    margin: 3mm 0 0;
+    margin: 2mm 0 0;
     padding-left: 3mm;
     border-left: 1.2pt solid var(--silver);
   }
@@ -807,8 +806,8 @@
     align-items: flex-start;
     gap: 2.5mm;
     font-size: 9.5pt;
-    line-height: 1.45;
-    margin-bottom: 1.5mm;
+    line-height: 1.35;
+    margin-bottom: 1.1mm;
   }
   .kv-opt input[type='checkbox'] {
     margin-top: 0.9mm;
@@ -850,8 +849,8 @@
   }
   .kv-sigline {
     border-bottom: 0.8pt solid var(--ink);
-    height: 10mm;
-    margin-top: 2mm;
+    height: 9mm;
+    margin-top: 1.5mm;
   }
   .kv-sigcap {
     margin-top: 1mm;
