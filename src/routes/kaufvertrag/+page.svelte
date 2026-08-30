@@ -446,8 +446,8 @@
       <div class="kv-opt">
         <input type="checkbox" id="g-aus" name="g-aus" />
         <label for="g-aus">
-          Jede Gewährleistung wird, soweit gesetzlich zulässig, wegbedungen; insbesondere sind
-          Wandelung und Minderung ausgeschlossen. Das Fahrzeug wird verkauft, wie es steht und liegt.
+          Jede Gewährleistung, soweit nach Gesetz möglich, wird wegbedungen, insbesondere sind
+          Wandelung und Minderung ausgeschlossen.
         </label>
       </div>
       <div class="kv-opt">
