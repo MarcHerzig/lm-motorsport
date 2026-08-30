@@ -318,12 +318,12 @@
 
     <div class="kv-section">
       <h2>Verkäufer</h2>
-      <div class="kv-grid">
+      <div class="kv-grid kv-grid-drei">
         <p class="kv-field"><label for="v-name">Name</label><input id="v-name" name="v-name" type="text" /></p>
         <p class="kv-field"><label for="v-vorname">Vorname</label><input id="v-vorname" name="v-vorname" type="text" /></p>
+        <p class="kv-field"><label for="v-tel">Telefonnummer</label><input id="v-tel" name="v-tel" type="text" /></p>
         <p class="kv-field"><label for="v-adresse">Wohnadresse</label><input id="v-adresse" name="v-adresse" type="text" /></p>
         <p class="kv-field"><label for="v-plz">PLZ / Ort</label><input id="v-plz" name="v-plz" type="text" /></p>
-        <p class="kv-field"><label for="v-tel">Telefonnummer</label><input id="v-tel" name="v-tel" type="text" /></p>
         <p class="kv-field"><label for="v-mail">E-Mail</label><input id="v-mail" name="v-mail" type="text" /></p>
         <div class="kv-field kv-span2">
           <span class="kv-label">Verkäufer ist rechtmässiger Eigentümer</span>
@@ -337,30 +337,30 @@
 
     <div class="kv-section">
       <h2>Käufer</h2>
-      <div class="kv-grid">
+      <div class="kv-grid kv-grid-drei">
         <p class="kv-field"><label for="k-name">Name</label><input id="k-name" name="k-name" type="text" /></p>
         <p class="kv-field"><label for="k-vorname">Vorname</label><input id="k-vorname" name="k-vorname" type="text" /></p>
+        <p class="kv-field"><label for="k-tel">Telefonnummer</label><input id="k-tel" name="k-tel" type="text" /></p>
         <p class="kv-field"><label for="k-adresse">Wohnadresse</label><input id="k-adresse" name="k-adresse" type="text" /></p>
         <p class="kv-field"><label for="k-plz">PLZ / Ort</label><input id="k-plz" name="k-plz" type="text" /></p>
-        <p class="kv-field"><label for="k-tel">Telefonnummer</label><input id="k-tel" name="k-tel" type="text" /></p>
         <p class="kv-field"><label for="k-mail">E-Mail</label><input id="k-mail" name="k-mail" type="text" /></p>
       </div>
     </div>
 
     <div class="kv-section">
       <h2>Fahrzeug</h2>
-      <div class="kv-grid">
+      <div class="kv-grid kv-grid-drei">
         <p class="kv-field"><label for="f-marke">Marke</label><input id="f-marke" name="f-marke" type="text" /></p>
-        <p class="kv-field"><label for="f-fahrgestell">Fahrgestell-Nummer</label><input id="f-fahrgestell" name="f-fahrgestell" type="text" /></p>
         <p class="kv-field"><label for="f-modell">Modell / Typ</label><input id="f-modell" name="f-modell" type="text" /></p>
-        <p class="kv-field"><label for="f-stamm">Stamm-Nummer</label><input id="f-stamm" name="f-stamm" type="text" /></p>
-        <p class="kv-field"><label for="f-karosserie">Karosserie (Limousine, Kombi, Cabrio, …)</label><input id="f-karosserie" name="f-karosserie" type="text" /></p>
-        <p class="kv-field"><label for="f-typengen">Typengenehmigung</label><input id="f-typengen" name="f-typengen" type="text" /></p>
+        <p class="kv-field"><label for="f-karosserie">Karosserie (Limousine, Kombi, …)</label><input id="f-karosserie" name="f-karosserie" type="text" /></p>
         <p class="kv-field"><label for="f-farbe">Farbe</label><input id="f-farbe" name="f-farbe" type="text" /></p>
-        <p class="kv-field"><label for="f-inverkehr">1. Inverkehrsetzung</label><input id="f-inverkehr" name="f-inverkehr" type="text" /></p>
         <p class="kv-field"><label for="f-hubraum">Hubraum</label><input id="f-hubraum" name="f-hubraum" type="text" /></p>
-        <p class="kv-field"><label for="f-km">Kilometerstand</label><input id="f-km" name="f-km" type="text" /></p>
         <p class="kv-field"><label for="f-leistung">Leistung</label><input id="f-leistung" name="f-leistung" type="text" /></p>
+        <p class="kv-field"><label for="f-fahrgestell">Fahrgestell-Nummer</label><input id="f-fahrgestell" name="f-fahrgestell" type="text" /></p>
+        <p class="kv-field"><label for="f-stamm">Stamm-Nummer</label><input id="f-stamm" name="f-stamm" type="text" /></p>
+        <p class="kv-field"><label for="f-typengen">Typengenehmigung</label><input id="f-typengen" name="f-typengen" type="text" /></p>
+        <p class="kv-field"><label for="f-inverkehr">1. Inverkehrsetzung</label><input id="f-inverkehr" name="f-inverkehr" type="text" /></p>
+        <p class="kv-field"><label for="f-km">Kilometerstand</label><input id="f-km" name="f-km" type="text" /></p>
         <p class="kv-field"><label for="f-mfk">Datum der letzten MFK-Prüfung</label><input id="f-mfk" name="f-mfk" type="text" /></p>
       </div>
       <p class="kv-note">Die meisten dieser Angaben stehen im Fahrzeugausweis.</p>
@@ -368,13 +368,13 @@
 
     <div class="kv-section">
       <h2>Verkaufspreis</h2>
-      <div class="kv-grid">
+      <div class="kv-grid kv-grid-drei">
         <p class="kv-field"><label for="p-chf">Kaufpreis in CHF</label><input id="p-chf" name="p-chf" type="text" /></p>
         <p class="kv-field"><label for="p-anzahlung">Anzahlung in CHF (falls vereinbart)</label><input id="p-anzahlung" name="p-anzahlung" type="text" /></p>
         <p class="kv-field"><label for="p-rest">Restbetrag bei Übergabe in CHF</label><input id="p-rest" name="p-rest" type="text" /></p>
         <p class="kv-field kv-span2">
           <label for="p-ausstattung">Zusätzliche Ausstattung (z. B. Anbauteile, Zubehör-Auspuff, Räder)</label>
-          <textarea id="p-ausstattung" name="p-ausstattung" rows="3"></textarea>
+          <textarea id="p-ausstattung" name="p-ausstattung" rows="2"></textarea>
         </p>
         <div class="kv-field">
           <span class="kv-label">Zweitschlüssel vorhanden</span>
@@ -567,30 +567,30 @@
 
   .kv-masthead {
     background: var(--band);
-    margin: -14mm -16mm 9mm;
-    padding: 9mm 16mm 8mm;
+    margin: -14mm -16mm 7mm;
+    padding: 7mm 16mm 6mm;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 12mm;
   }
   .kv-masthead img {
-    width: 44mm;
+    width: 38mm;
     height: auto;
     display: block;
   }
   .kv-slim {
-    padding-top: 7mm;
-    padding-bottom: 6mm;
+    padding-top: 5mm;
+    padding-bottom: 5mm;
   }
   .kv-slim img {
-    width: 30mm;
+    width: 26mm;
   }
 
   .kv-doctitle {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-weight: 500;
-    font-size: 20pt;
+    font-size: 17pt;
     line-height: 1;
     letter-spacing: 0.02em;
     text-transform: uppercase;
@@ -608,21 +608,21 @@
     font-weight: 400;
     letter-spacing: 0.22em;
     color: var(--silver);
-    margin-top: 3mm;
+    margin-top: 2mm;
   }
 
   .kv-section {
-    margin-bottom: 7mm;
+    margin-bottom: 4.5mm;
   }
   .kv-sheet h2 {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-weight: 500;
-    font-size: 12.5pt;
+    font-size: 11.5pt;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink);
-    margin: 0 0 4mm;
-    padding-bottom: 1.6mm;
+    margin: 0 0 3mm;
+    padding-bottom: 1.2mm;
     border-bottom: 1.6pt solid var(--ink);
     display: flex;
     align-items: baseline;
@@ -655,15 +655,19 @@
     margin: 0 0 1.5mm;
   }
   .kv-h3-gap {
-    margin-top: 5mm !important;
+    margin-top: 3.5mm !important;
   }
 
   .kv-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: 10mm;
-    row-gap: 4.5mm;
+    column-gap: 7mm;
+    row-gap: 3.2mm;
   }
+  .kv-grid-drei {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
   .kv-span2 {
     grid-column: 1 / -1;
   }
@@ -671,8 +675,8 @@
   .kv-field {
     display: flex;
     flex-direction: column;
-    gap: 1mm;
-    margin: 0 0 4.5mm;
+    gap: 0.6mm;
+    margin: 0 0 3.2mm;
   }
   .kv-grid .kv-field {
     margin-bottom: 0;
@@ -680,7 +684,7 @@
   .kv-field label,
   .kv-label,
   .kv-sigcap {
-    font-size: 7pt;
+    font-size: 6.5pt;
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -697,7 +701,7 @@
     border: none;
     border-bottom: 0.6pt solid var(--hairline);
     border-radius: 1px;
-    padding: 1.6mm 2mm;
+    padding: 1.1mm 1.8mm;
     width: 100%;
     box-sizing: border-box;
   }
@@ -784,11 +788,11 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 6mm;
-    padding: 2.6mm 0;
+    padding: 2.2mm 0;
     border-bottom: 0.6pt solid var(--hairline);
   }
   .kv-remarks textarea {
-    min-height: 26mm;
+    min-height: 18mm;
   }
   .kv-clause {
     font-size: 9.5pt;
@@ -840,8 +844,8 @@
   }
   .kv-sigline {
     border-bottom: 0.8pt solid var(--ink);
-    height: 16mm;
-    margin-top: 4mm;
+    height: 13mm;
+    margin-top: 3mm;
   }
   .kv-sigcap {
     margin-top: 1.5mm;
@@ -849,7 +853,7 @@
 
   .kv-foot {
     margin-top: auto;
-    padding-top: 5mm;
+    padding-top: 4mm;
     border-top: 0.6pt solid var(--hairline);
     display: flex;
     justify-content: space-between;
@@ -883,6 +887,7 @@
       padding: 7mm 6mm 6mm;
     }
     .kv-grid,
+    .kv-grid-drei,
     .kv-signatures {
       grid-template-columns: 1fr;
     }
@@ -909,7 +914,7 @@
     line-height: 1.35;
     color: var(--ink);
     border-bottom: 0.6pt solid var(--hairline);
-    padding: 1.6mm 2mm;
+    padding: 1.1mm 1.8mm;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
@@ -973,6 +978,9 @@
     .kv-grid,
     .kv-signatures {
       grid-template-columns: 1fr 1fr;
+    }
+    .kv-grid-drei {
+      grid-template-columns: repeat(3, 1fr);
     }
     .kv-qrow {
       flex-direction: row;
