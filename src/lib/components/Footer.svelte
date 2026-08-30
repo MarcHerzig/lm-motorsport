@@ -19,6 +19,11 @@
         <li><a href="/services/car-checker" class="hover:text-accent">LM Car Checker</a></li>
         <li><a href="/services/pit-stop" class="hover:text-accent">LM Pit Stop</a></li>
       </ul>
+
+      <div class="eyebrow mt-6 mb-3">Gratis</div>
+      <ul class="space-y-2 text-sm">
+        <li><a href="/kaufvertrag" class="hover:text-accent">Kaufvertrag-Vorlage</a></li>
+      </ul>
     </div>
 
     <div>
