@@ -44,7 +44,7 @@
 
   // Nutzbare Hoehe eines Blattes: A4 minus Blattpolster oben/unten,
   // mit etwas Reserve gegen Rundungen im Druckdialog.
-  const INHALT_MM = 266;
+  const INHALT_MM = 248;
 
   // Statt die Abstaende zu schaetzen, wird vor dem Druck gemessen: Passt der
   // Inhalt eines Blattes nicht auf eine A4-Seite, wird er so weit verkleinert,
@@ -59,14 +59,14 @@
     }
 
     // Nur messen, wenn das Blatt am Bildschirm schon seine Druckgeometrie hat
-    // (210mm breit, mehrspaltig) — sonst waere die Messung wertlos.
+    // (186mm breit, mehrspaltig) — sonst waere die Messung wertlos.
     if (!window.matchMedia('(min-width: 821px)').matches) return;
 
     for (const blatt of blaetter) {
       const inhalt = blatt.querySelector('.kv-inhalt');
       if (!inhalt) continue;
 
-      const proMm = blatt.getBoundingClientRect().width / 210;
+      const proMm = blatt.getBoundingClientRect().width / 186;
       const platz = INHALT_MM * proMm;
 
       // Wrapper kurz auf Inhaltshoehe stellen, sonst misst man die
@@ -426,24 +426,6 @@
       </div>
     </div>
 
-    <div class="kv-foot">
-      <div>
-        {site.name} &middot; lm-motorsport.ch &middot; {site.email}<br />
-        Vertragsvorlage — Seite 1 von 2, nur zusammen mit Seite 2 gültig.
-      </div>
-      <div class="kv-pageno">1/2</div>
-    </div>
-   </div>
-  </div>
-
-  <!-- ============ SEITE 2 ============ -->
-  <div class="kv-sheet">
-   <div class="kv-inhalt">
-    <div class="kv-masthead kv-slim">
-      <img src="/brand/logo.png?v=2" alt={site.name} />
-      <div class="kv-doctitle kv-doctitle-sm">Kaufvertrag<span>Seite 2 von 2</span></div>
-    </div>
-
     <div class="kv-section">
       <h2>Weitere Angaben zum Fahrzeug</h2>
 
@@ -483,6 +465,25 @@
         <textarea id="w-bemerkungen" name="w-bemerkungen" rows="6"></textarea>
       </p>
     </div>
+
+    <div class="kv-foot">
+      <div>
+        {site.name} &middot; lm-motorsport.ch &middot; {site.email}<br />
+        Vertragsvorlage — Seite 1 von 2, nur zusammen mit Seite 2 gültig.
+      </div>
+      <div class="kv-pageno">1/2</div>
+    </div>
+   </div>
+  </div>
+
+  <!-- ============ SEITE 2 ============ -->
+  <div class="kv-sheet">
+   <div class="kv-inhalt">
+    <div class="kv-masthead kv-slim">
+      <img src="/brand/logo.png?v=2" alt={site.name} />
+      <div class="kv-doctitle kv-doctitle-sm">Kaufvertrag<span>Seite 2 von 2</span></div>
+    </div>
+
 
     <div class="kv-section">
       <h2>Allgemeine Bestimmungen</h2>
@@ -591,12 +592,12 @@
   }
 
   .kv-sheet {
-    width: 210mm;
+    width: 186mm;
     max-width: 100%;
-    min-height: 297mm;
+    min-height: 273mm;
     background: var(--paper);
     color: var(--ink);
-    padding: 14mm 16mm 12mm;
+    padding: 12mm 14mm 10mm;
     display: flex;
     flex-direction: column;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 18px 44px rgba(0, 0, 0, 0.45);
@@ -612,15 +613,15 @@
 
   .kv-masthead {
     background: var(--band);
-    margin: -14mm -16mm 6mm;
-    padding: 6mm 16mm 5mm;
+    margin: -12mm -14mm 5mm;
+    padding: 6mm 14mm 5mm;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 12mm;
   }
   .kv-masthead img {
-    width: 34mm;
+    width: 30mm;
     height: auto;
     display: block;
   }
@@ -629,13 +630,13 @@
     padding-bottom: 4mm;
   }
   .kv-slim img {
-    width: 26mm;
+    width: 23mm;
   }
 
   .kv-doctitle {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-weight: 500;
-    font-size: 15pt;
+    font-size: 13pt;
     line-height: 1;
     letter-spacing: 0.02em;
     text-transform: uppercase;
@@ -644,7 +645,7 @@
     text-wrap: balance;
   }
   .kv-doctitle-sm {
-    font-size: 13pt;
+    font-size: 11pt;
   }
   .kv-doctitle span {
     display: block;
@@ -662,7 +663,7 @@
   .kv-sheet h2 {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-weight: 500;
-    font-size: 11pt;
+    font-size: 10pt;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink);
@@ -697,7 +698,7 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink);
-    margin: 0 0 1.2mm;
+    margin: 0 0 1mm;
   }
   .kv-h3-gap {
     margin-top: 2.5mm !important;
@@ -706,8 +707,8 @@
   .kv-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: 6mm;
-    row-gap: 2.8mm;
+    column-gap: 5mm;
+    row-gap: 2.5mm;
   }
   .kv-grid-drei {
     grid-template-columns: repeat(3, 1fr);
@@ -720,8 +721,8 @@
   .kv-field {
     display: flex;
     flex-direction: column;
-    gap: 0.5mm;
-    margin: 0 0 2.8mm;
+    gap: 0.4mm;
+    margin: 0 0 2.5mm;
   }
   .kv-grid .kv-field {
     margin-bottom: 0;
@@ -729,7 +730,7 @@
   .kv-field label,
   .kv-label,
   .kv-sigcap {
-    font-size: 6pt;
+    font-size: 5.5pt;
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -739,7 +740,7 @@
   .kv-field textarea,
   .kv-inline {
     font-family: 'Inter', system-ui, sans-serif;
-    font-size: 10pt;
+    font-size: 9pt;
     font-variant-numeric: tabular-nums;
     color: var(--ink);
     background: var(--fill);
@@ -772,7 +773,7 @@
   }
 
   .kv-note {
-    font-size: 7.5pt;
+    font-size: 7pt;
     color: var(--ink-soft);
     margin: 1.5mm 0 0;
     line-height: 1.4;
@@ -791,7 +792,7 @@
     display: flex;
     align-items: center;
     gap: 2mm;
-    font-size: 9.5pt;
+    font-size: 8.5pt;
   }
   .kv-choice label {
     color: var(--ink);
@@ -840,7 +841,7 @@
     min-height: 12mm;
   }
   .kv-clause {
-    font-size: 9.5pt;
+    font-size: 8.5pt;
     line-height: 1.35;
     color: var(--ink);
     margin: 2mm 0 0;
@@ -848,7 +849,7 @@
     border-left: 1.2pt solid var(--silver);
   }
   .kv-question {
-    font-size: 9.5pt;
+    font-size: 8.5pt;
     line-height: 1.4;
     color: var(--ink);
   }
@@ -857,7 +858,7 @@
     display: flex;
     align-items: flex-start;
     gap: 2.5mm;
-    font-size: 9.5pt;
+    font-size: 8.5pt;
     line-height: 1.35;
     margin-bottom: 1.1mm;
   }
@@ -871,7 +872,7 @@
     white-space: nowrap;
   }
   .kv-inline {
-    font-size: 9.5pt;
+    font-size: 8.5pt;
     padding: 0.8mm 1.5mm;
     flex: 1;
     width: auto;
@@ -884,7 +885,7 @@
     margin-top: 1mm;
   }
   .kv-signatures h3 {
-    font-size: 9pt;
+    font-size: 8.5pt;
     margin: 0;
     white-space: nowrap;
   }
@@ -901,7 +902,7 @@
   }
   .kv-sigline {
     border-bottom: 0.8pt solid var(--ink);
-    height: 9mm;
+    height: 8mm;
     margin-top: 1.5mm;
   }
   .kv-sigcap {
@@ -916,13 +917,13 @@
     justify-content: space-between;
     align-items: flex-end;
     gap: 8mm;
-    font-size: 7pt;
-    line-height: 1.45;
+    font-size: 6.5pt;
+    line-height: 1.4;
     color: var(--ink-soft);
   }
   .kv-pageno {
     font-family: 'Oswald', sans-serif;
-    font-size: 11pt;
+    font-size: 10pt;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
   }
@@ -957,7 +958,8 @@
   /* ---------- Druck: nur die beiden Blätter ---------- */
   @page {
     size: A4;
-    margin: 0;
+    /* Standardrand des Druckdialogs — das Blatt ist darauf ausgelegt */
+    margin: 12mm;
   }
 
   /* Textabbild eines Eingabefelds — nur im Druck sichtbar, siehe wertSpiegeln().
@@ -966,7 +968,7 @@
   :global(.kv-wert) {
     display: none;
     font-family: 'Inter', system-ui, sans-serif;
-    font-size: 10pt;
+    font-size: 9pt;
     font-variant-numeric: tabular-nums;
     line-height: 1.35;
     color: var(--ink);
@@ -977,7 +979,7 @@
   }
   :global(.kv-wert-inline) {
     flex: 1;
-    font-size: 9.5pt;
+    font-size: 8.5pt;
     padding: 0.8mm 1.5mm;
   }
 
@@ -1006,10 +1008,10 @@
       gap: 0;
     }
     .kv-sheet {
-      width: 210mm;
+      width: 186mm;
       /* min-height statt height: laeuft ein Blatt einmal ueber, wird der Rest
          auf eine Folgeseite geschoben statt abgeschnitten. */
-      min-height: 296mm;
+      min-height: 272mm;
       height: auto;
       max-width: none;
       box-shadow: none;
@@ -1022,11 +1024,12 @@
     }
     /* Das Blatt behaelt im Druck exakt die Bildschirmaufteilung */
     .kv-sheet {
-      padding: 14mm 16mm 12mm;
+      padding: 12mm 14mm 10mm;
+      margin: 0 auto;
     }
     .kv-masthead {
-      margin: -14mm -16mm 9mm;
-      padding: 9mm 16mm 8mm;
+      margin: -12mm -14mm 5mm;
+      padding: 6mm 14mm 5mm;
     }
     .kv-slim {
       padding-top: 7mm;
