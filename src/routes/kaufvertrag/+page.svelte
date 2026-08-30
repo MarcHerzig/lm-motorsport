@@ -42,8 +42,50 @@
     for (const el of felder()) if (el.type !== 'checkbox') wertSpiegeln(el);
   }
 
-  function drucken() {
+  // Nutzbare Hoehe eines Blattes: A4 minus Blattpolster oben/unten,
+  // mit etwas Reserve gegen Rundungen im Druckdialog.
+  const INHALT_MM = 266;
+
+  // Statt die Abstaende zu schaetzen, wird vor dem Druck gemessen: Passt der
+  // Inhalt eines Blattes nicht auf eine A4-Seite, wird er so weit verkleinert,
+  // dass er genau passt. Damit sind es immer zwei Seiten.
+  function blaetterAnpassen() {
+    if (!formEl) return;
+    const blaetter = [...formEl.querySelectorAll('.kv-sheet')];
+
+    for (const blatt of blaetter) {
+      const inhalt = blatt.querySelector('.kv-inhalt');
+      if (inhalt) inhalt.style.zoom = '';
+    }
+
+    // Nur messen, wenn das Blatt am Bildschirm schon seine Druckgeometrie hat
+    // (210mm breit, mehrspaltig) — sonst waere die Messung wertlos.
+    if (!window.matchMedia('(min-width: 821px)').matches) return;
+
+    for (const blatt of blaetter) {
+      const inhalt = blatt.querySelector('.kv-inhalt');
+      if (!inhalt) continue;
+
+      const proMm = blatt.getBoundingClientRect().width / 210;
+      const platz = INHALT_MM * proMm;
+
+      // Wrapper kurz auf Inhaltshoehe stellen, sonst misst man die
+      // aufgezogene Blatthoehe statt des Inhalts.
+      inhalt.style.flex = '0 0 auto';
+      const noetig = inhalt.scrollHeight;
+      inhalt.style.flex = '';
+
+      if (noetig > platz) inhalt.style.zoom = String(Math.max(0.65, platz / noetig));
+    }
+  }
+
+  function fuerDruckVorbereiten() {
     werteSpiegeln();
+    blaetterAnpassen();
+  }
+
+  function drucken() {
+    fuerDruckVorbereiten();
     window.print();
   }
 
@@ -188,8 +230,8 @@
     }
 
     // Auch fuer Strg+P statt des Buttons
-    window.addEventListener('beforeprint', werteSpiegeln);
-    return () => window.removeEventListener('beforeprint', werteSpiegeln);
+    window.addEventListener('beforeprint', fuerDruckVorbereiten);
+    return () => window.removeEventListener('beforeprint', fuerDruckVorbereiten);
   });
 </script>
 
@@ -311,6 +353,7 @@
 <form id="kaufvertrag" class="kv-stage" bind:this={formEl} on:submit|preventDefault>
   <!-- ============ SEITE 1 ============ -->
   <div class="kv-sheet">
+   <div class="kv-inhalt">
     <div class="kv-masthead">
       <img src="/brand/logo.png?v=2" alt={site.name} />
       <div class="kv-doctitle">Kaufvertrag<span>Fahrzeug — Privatverkauf</span></div>
@@ -390,10 +433,12 @@
       </div>
       <div class="kv-pageno">1/2</div>
     </div>
+   </div>
   </div>
 
   <!-- ============ SEITE 2 ============ -->
   <div class="kv-sheet">
+   <div class="kv-inhalt">
     <div class="kv-masthead kv-slim">
       <img src="/brand/logo.png?v=2" alt={site.name} />
       <div class="kv-doctitle kv-doctitle-sm">Kaufvertrag<span>Seite 2 von 2</span></div>
@@ -520,6 +565,7 @@
       </div>
       <div class="kv-pageno">2/2</div>
     </div>
+   </div>
   </div>
 </form>
 
@@ -556,6 +602,12 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 18px 44px rgba(0, 0, 0, 0.45);
     box-sizing: border-box;
     font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .kv-inhalt {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   .kv-masthead {
