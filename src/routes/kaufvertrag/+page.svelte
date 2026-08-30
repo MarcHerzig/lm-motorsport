@@ -325,13 +325,6 @@
         <p class="kv-field"><label for="v-adresse">Wohnadresse</label><input id="v-adresse" name="v-adresse" type="text" /></p>
         <p class="kv-field"><label for="v-plz">PLZ / Ort</label><input id="v-plz" name="v-plz" type="text" /></p>
         <p class="kv-field"><label for="v-mail">E-Mail</label><input id="v-mail" name="v-mail" type="text" /></p>
-        <div class="kv-field kv-span2">
-          <span class="kv-label">Verkäufer ist rechtmässiger Eigentümer</span>
-          <span class="kv-choices kv-choices-pad">
-            <span class="kv-choice"><input type="checkbox" id="v-eig-ja" name="v-eig-ja" /><label for="v-eig-ja">ja</label></span>
-            <span class="kv-choice"><input type="checkbox" id="v-eig-nein" name="v-eig-nein" /><label for="v-eig-nein">nein</label></span>
-          </span>
-        </div>
       </div>
     </div>
 
@@ -352,18 +345,15 @@
       <div class="kv-grid kv-grid-drei">
         <p class="kv-field"><label for="f-marke">Marke</label><input id="f-marke" name="f-marke" type="text" /></p>
         <p class="kv-field"><label for="f-modell">Modell / Typ</label><input id="f-modell" name="f-modell" type="text" /></p>
-        <p class="kv-field"><label for="f-karosserie">Karosserie (Limousine, Kombi, …)</label><input id="f-karosserie" name="f-karosserie" type="text" /></p>
         <p class="kv-field"><label for="f-farbe">Farbe</label><input id="f-farbe" name="f-farbe" type="text" /></p>
         <p class="kv-field"><label for="f-hubraum">Hubraum</label><input id="f-hubraum" name="f-hubraum" type="text" /></p>
         <p class="kv-field"><label for="f-leistung">Leistung</label><input id="f-leistung" name="f-leistung" type="text" /></p>
         <p class="kv-field"><label for="f-fahrgestell">Fahrgestell-Nummer</label><input id="f-fahrgestell" name="f-fahrgestell" type="text" /></p>
         <p class="kv-field"><label for="f-stamm">Stamm-Nummer</label><input id="f-stamm" name="f-stamm" type="text" /></p>
-        <p class="kv-field"><label for="f-typengen">Typengenehmigung</label><input id="f-typengen" name="f-typengen" type="text" /></p>
         <p class="kv-field"><label for="f-inverkehr">1. Inverkehrsetzung</label><input id="f-inverkehr" name="f-inverkehr" type="text" /></p>
         <p class="kv-field"><label for="f-km">Kilometerstand</label><input id="f-km" name="f-km" type="text" /></p>
         <p class="kv-field"><label for="f-mfk">Datum der letzten MFK-Prüfung</label><input id="f-mfk" name="f-mfk" type="text" /></p>
       </div>
-      <p class="kv-note">Die meisten dieser Angaben stehen im Fahrzeugausweis.</p>
     </div>
 
     <div class="kv-section">
@@ -504,14 +494,18 @@
       <h2>Unterschriften</h2>
       <div class="kv-signatures">
         <div>
-          <h3>Verkäufer</h3>
-          <p class="kv-field"><label for="s-v-ort">Ort / Datum</label><input id="s-v-ort" name="s-v-ort" type="text" /></p>
+          <div class="kv-sigkopf">
+            <h3>Verkäufer</h3>
+            <p class="kv-field"><label for="s-v-ort">Ort / Datum</label><input id="s-v-ort" name="s-v-ort" type="text" /></p>
+          </div>
           <div class="kv-sigline"></div>
           <div class="kv-sigcap">Unterschrift</div>
         </div>
         <div>
-          <h3>Käufer</h3>
-          <p class="kv-field"><label for="s-k-ort">Ort / Datum</label><input id="s-k-ort" name="s-k-ort" type="text" /></p>
+          <div class="kv-sigkopf">
+            <h3>Käufer</h3>
+            <p class="kv-field"><label for="s-k-ort">Ort / Datum</label><input id="s-k-ort" name="s-k-ort" type="text" /></p>
+          </div>
           <div class="kv-sigline"></div>
           <div class="kv-sigcap">Unterschrift</div>
         </div>
@@ -567,21 +561,21 @@
 
   .kv-masthead {
     background: var(--band);
-    margin: -14mm -16mm 7mm;
-    padding: 7mm 16mm 6mm;
+    margin: -14mm -16mm 6mm;
+    padding: 6mm 16mm 5mm;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 12mm;
   }
   .kv-masthead img {
-    width: 38mm;
+    width: 34mm;
     height: auto;
     display: block;
   }
   .kv-slim {
-    padding-top: 5mm;
-    padding-bottom: 5mm;
+    padding-top: 4mm;
+    padding-bottom: 4mm;
   }
   .kv-slim img {
     width: 26mm;
@@ -590,7 +584,7 @@
   .kv-doctitle {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-weight: 500;
-    font-size: 17pt;
+    font-size: 15pt;
     line-height: 1;
     letter-spacing: 0.02em;
     text-transform: uppercase;
@@ -612,12 +606,12 @@
   }
 
   .kv-section {
-    margin-bottom: 4.5mm;
+    margin-bottom: 3.5mm;
   }
   .kv-sheet h2 {
     font-family: 'Oswald', 'Arial Narrow', sans-serif;
     font-weight: 500;
-    font-size: 11.5pt;
+    font-size: 11pt;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink);
@@ -661,8 +655,8 @@
   .kv-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: 7mm;
-    row-gap: 3.2mm;
+    column-gap: 6mm;
+    row-gap: 2.8mm;
   }
   .kv-grid-drei {
     grid-template-columns: repeat(3, 1fr);
@@ -675,8 +669,8 @@
   .kv-field {
     display: flex;
     flex-direction: column;
-    gap: 0.6mm;
-    margin: 0 0 3.2mm;
+    gap: 0.5mm;
+    margin: 0 0 2.8mm;
   }
   .kv-grid .kv-field {
     margin-bottom: 0;
@@ -684,7 +678,7 @@
   .kv-field label,
   .kv-label,
   .kv-sigcap {
-    font-size: 6.5pt;
+    font-size: 6pt;
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -701,7 +695,7 @@
     border: none;
     border-bottom: 0.6pt solid var(--hairline);
     border-radius: 1px;
-    padding: 1.1mm 1.8mm;
+    padding: 0.9mm 1.6mm;
     width: 100%;
     box-sizing: border-box;
   }
@@ -788,11 +782,11 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 6mm;
-    padding: 2.2mm 0;
+    padding: 1.8mm 0;
     border-bottom: 0.6pt solid var(--hairline);
   }
   .kv-remarks textarea {
-    min-height: 18mm;
+    min-height: 15mm;
   }
   .kv-clause {
     font-size: 9.5pt;
@@ -835,32 +829,44 @@
   .kv-signatures {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10mm;
-    margin-top: 2mm;
+    gap: 8mm;
+    margin-top: 1mm;
   }
   .kv-signatures h3 {
-    font-size: 10pt;
-    margin-bottom: 3mm;
+    font-size: 9pt;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  /* Rolle und Ort/Datum teilen sich eine Zeile ueber der Unterschriftslinie */
+  .kv-sigkopf {
+    display: flex;
+    align-items: flex-end;
+    gap: 5mm;
+  }
+  .kv-sigkopf .kv-field {
+    flex: 1;
+    margin: 0;
   }
   .kv-sigline {
     border-bottom: 0.8pt solid var(--ink);
-    height: 13mm;
-    margin-top: 3mm;
+    height: 10mm;
+    margin-top: 2mm;
   }
   .kv-sigcap {
-    margin-top: 1.5mm;
+    margin-top: 1mm;
   }
 
   .kv-foot {
     margin-top: auto;
-    padding-top: 4mm;
+    padding-top: 3mm;
     border-top: 0.6pt solid var(--hairline);
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
     gap: 8mm;
-    font-size: 7.5pt;
-    line-height: 1.5;
+    font-size: 7pt;
+    line-height: 1.45;
     color: var(--ink-soft);
   }
   .kv-pageno {
@@ -914,7 +920,7 @@
     line-height: 1.35;
     color: var(--ink);
     border-bottom: 0.6pt solid var(--hairline);
-    padding: 1.1mm 1.8mm;
+    padding: 0.9mm 1.6mm;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
