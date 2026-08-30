@@ -172,7 +172,7 @@
       meldung =
         r.rolle === 'verkaeufer'
           ? 'Vertrag geöffnet. Du kannst alle Felder ändern.'
-          : 'Vertrag geöffnet. Ändern lässt sich nur das Feld „Generelle Bemerkungen".';
+          : 'Vertrag geöffnet. Ändern lässt sich nur das Feld „Bemerkungen Käufer und Verkäufer".';
     } catch (e) {
       fehler = e.message;
     } finally {
@@ -298,7 +298,7 @@
         </div>
       </div>
       <p class="text-xs text-muted mt-3">
-        Ohne PIN lässt sich der Vertrag ansehen und im Feld „Generelle Bemerkungen" ergänzen. Mit
+        Ohne PIN lässt sich der Vertrag ansehen und im Feld „Bemerkungen Käufer und Verkäufer" ergänzen. Mit
         PIN sind alle Felder änderbar.
       </p>
       <button type="button" class="btn-primary mt-5" on:click={oeffnen} disabled={laeuft}>
@@ -335,7 +335,7 @@
           <span class="font-heading text-2xl tracking-[0.3em] text-ink ml-3">{code}</span>
         </div>
         <span class="text-sm text-muted">
-          {rolle === 'verkaeufer' ? 'Geöffnet als Verkäufer — alle Felder änderbar.' : 'Nur „Generelle Bemerkungen" ist änderbar.'}
+          {rolle === 'verkaeufer' ? 'Geöffnet als Verkäufer — alle Felder änderbar.' : 'Nur „Bemerkungen Käufer und Verkäufer" ist änderbar.'}
         </span>
       </div>
     </div>
@@ -459,11 +459,6 @@
           </span>
         </div>
       </div>
-
-      <p class="kv-field kv-remarks">
-        <label for="w-bemerkungen">Generelle Bemerkungen</label>
-        <textarea id="w-bemerkungen" name="w-bemerkungen" rows="6"></textarea>
-      </p>
     </div>
 
     <div class="kv-foot">
@@ -533,6 +528,18 @@
       <p class="kv-note">
         Nutzen und Gefahr gehen mit der Übergabe des Fahrzeugs auf den Käufer über. Der Käufer
         bestätigt mit seiner Unterschrift, das Fahrzeug besichtigt und probegefahren zu haben.
+      </p>
+    </div>
+
+    <div class="kv-section">
+      <h2>Bemerkungen Käufer und Verkäufer</h2>
+      <p class="kv-field kv-remarks">
+        <textarea
+          id="w-bemerkungen"
+          name="w-bemerkungen"
+          rows="6"
+          aria-label="Bemerkungen Käufer und Verkäufer"
+        ></textarea>
       </p>
     </div>
 
@@ -838,7 +845,7 @@
     border-bottom: 0.6pt solid var(--hairline);
   }
   .kv-remarks textarea {
-    min-height: 12mm;
+    min-height: 24mm;
   }
   .kv-clause {
     font-size: 8.5pt;
