@@ -35,6 +35,19 @@
     </div>
 
     <div>
+      <h2 class="text-xl mb-2 normal-case text-ink">Gespeicherte Kaufverträge</h2>
+      <p>
+        Wer auf <a href="/kaufvertrag" class="hover:text-accent">/kaufvertrag</a> einen Vertrag
+        speichert, legt die eingegebenen Angaben (unter anderem Namen, Adressen, Telefonnummern und
+        Fahrzeugdaten von Verkäufer und Käufer) auf unserem Server ab. Der Zugriff erfolgt
+        ausschliesslich über den sechsstelligen Abruf-Code, das Ändern und Löschen aller Felder
+        zusätzlich nur mit dem Master-PIN. Wir werten diese Daten nicht aus und geben sie nicht
+        weiter. Wer den Master-PIN hat, kann den Vertrag jederzeit selbst löschen; ohne Änderung
+        wird ein Vertrag nach einem Jahr automatisch entfernt.
+      </p>
+    </div>
+
+    <div>
       <h2 class="text-xl mb-2 normal-case text-ink">Cookies</h2>
       <p>
         Diese Website verwendet aktuell nur ein technisch notwendiges, lokales Speicherelement
