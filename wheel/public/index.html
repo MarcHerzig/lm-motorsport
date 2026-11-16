@@ -339,7 +339,7 @@ async function add() {
   } catch (e) { $('err').textContent = e.message; }
 }
 $('add').onclick = add;
-$('iname').onkeydown = (e) => e.key === 'Enter' && add();
+$('iname').addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
 
 // ---------- Name ----------
 $('nameField').value = me;
