@@ -13,7 +13,7 @@ const PORT = Number(process.env.PORT || 3000);
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
-let state = { items: [], wins: [], busyUntil: 0, busyBy: null, lock: { on: false, spinners: [] } };
+let state = { items: [], wins: [], busyUntil: 0, busyBy: null, lock: { on: false, spinners: [], by: null }, users: {}, sessions: {} };
 try {
   state = { ...state, ...JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) };
 } catch {}
@@ -26,6 +26,13 @@ function save() {
 
 const MAX_LOCKED_SPINS = 2;
 const LOCKED = { error: 'Das Rad ist gesperrt' };
+const scrypt = (pin, salt) => crypto.scryptSync(pin, salt, 32).toString('hex');
+const fails = {}; // Fehlversuche je Name: { n, until }
+function auth(req) {
+  const t = String(req.headers['x-token'] || '');
+  const u = state.users[state.sessions[t]];
+  return u ? u.name : '';
+}
 const clean = (s, max) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 const weightOf = (w) => Math.min(10, Math.max(1, Math.round(Number(w) || 5)));
 
@@ -56,17 +63,18 @@ function readBody(req) {
 
 // Privat: Niemand sieht, wer was gezogen hat. Jeder sieht nur seine eigenen Gewinne.
 const publicState = (viewer = '') => ({
+  me: viewer,
   items: state.items.map(({ id, name, owner, weight }) => ({ id, name, owner, weight })),
   mine: state.wins.filter((w) => w.by === viewer),
-  lock: { on: state.lock.on, spinners: state.lock.spinners, max: MAX_LOCKED_SPINS },
+  lock: { on: state.lock.on, spinners: state.lock.spinners, by: state.lock.by, max: MAX_LOCKED_SPINS },
   busy: state.busyUntil > Date.now() ? state.busyBy : null,
   now: Date.now()
 });
 
 async function api(req, res, url) {
   const route = `${req.method} ${url.pathname}`;
-  const viewer = clean(url.searchParams.get('name'), 30);
-  if (route === 'GET /api/state') return json(res, 200, publicState(viewer));
+  const me = auth(req); // Wer du bist, bestimmt allein der Server anhand des Tokens
+  if (route === 'GET /api/state') return json(res, 200, { ...publicState(me), me });
 
   let body = {};
   try {
@@ -74,17 +82,43 @@ async function api(req, res, url) {
   } catch {
     return json(res, 400, { error: 'Ungültige Anfrage' });
   }
-  const me = clean(body.me ?? body.name ?? viewer, 30);
+
+  if (route === 'POST /api/login') {
+    const name = clean(body.name, 30);
+    const pin = String(body.pin ?? '');
+    if (!name || pin.length < 4 || pin.length > 40) return json(res, 400, { error: 'Name und PIN (mind. 4 Zeichen) nötig' });
+    const key = name.toLowerCase();
+    const f = fails[key] || { n: 0, until: 0 };
+    if (f.until > Date.now()) return json(res, 429, { error: 'Zu viele Fehlversuche, warte eine Minute' });
+    let u = state.users[key];
+    if (!u) {
+      const salt = crypto.randomBytes(16).toString('hex');
+      u = state.users[key] = { name, salt, hash: scrypt(pin, salt) };
+    } else if (!crypto.timingSafeEqual(Buffer.from(scrypt(pin, u.salt)), Buffer.from(u.hash))) {
+      f.n += 1;
+      if (f.n >= 5) { f.n = 0; f.until = Date.now() + 60000; }
+      fails[key] = f;
+      return json(res, 401, { error: 'Falsche PIN. Dieser Name ist schon vergeben.' });
+    }
+    delete fails[key];
+    const token = crypto.randomBytes(24).toString('hex');
+    state.sessions[token] = key;
+    save();
+    return json(res, 200, { token, name: u.name });
+  }
+
+  if (!me) return json(res, 401, { error: 'Bitte zuerst oben anmelden' });
 
   if (route === 'POST /api/lock') {
     if (state.busyUntil > Date.now()) return json(res, 409, { error: 'Das Rad dreht gerade noch' });
-    state.lock = { on: true, spinners: [] };
+    state.lock = { on: true, spinners: [], by: me };
     save();
     return json(res, 200, publicState(me));
   }
   if (route === 'POST /api/unlock') {
     if (state.busyUntil > Date.now()) return json(res, 409, { error: 'Das Rad dreht gerade noch' });
-    state.lock = { on: false, spinners: [] };
+    if (state.lock.on && state.lock.by && state.lock.by !== me) return json(res, 403, { error: `Nur ${state.lock.by} kann entsperren` });
+    state.lock = { on: false, spinners: [], by: null };
     save();
     return json(res, 200, publicState(me));
   }
@@ -94,7 +128,7 @@ async function api(req, res, url) {
 
   if (route === 'POST /api/items') {
     const name = clean(body.name, 80);
-    const owner = clean(body.owner, 30);
+    const owner = me;
     if (!name || !owner) return json(res, 400, { error: 'Name und Wunsch nötig' });
     state.items.push({
       id: crypto.randomUUID(),

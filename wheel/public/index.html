@@ -82,7 +82,8 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
     <div class="stripe"></div>
     <div><h1>Wunschrad</h1><small>LM Motorsport · Garage</small></div>
   </div>
-  <div class="me"><label for="nameField" style="margin:0">Dein Name</label><input type="text" id="nameField" maxlength="30" placeholder="Vorname" autocomplete="off" style="width:150px"></div>
+  <div class="me" id="loginBox"><input type="text" id="nameField" maxlength="30" placeholder="Vorname" autocomplete="username" style="width:120px"><input type="password" id="pinField" maxlength="40" placeholder="PIN" autocomplete="current-password" style="width:90px;background:var(--bg);border:1px solid var(--border);color:var(--ink);padding:10px 12px;border-radius:2px"><button class="btn sm" id="loginBtn">Anmelden</button></div>
+  <div class="me" id="meBox" style="display:none">Angemeldet als <b id="meName"></b> <button class="btn sm" id="logoutBtn">Abmelden</button></div>
 </header>
 
 <main>
@@ -130,22 +131,25 @@ const $ = (id) => document.getElementById(id);
 const TAU = Math.PI * 2;
 let S = { items: [], mine: [], lock: { on: false, spinners: [], max: 2 }, busy: null, now: Date.now() };
 let me = '';
-try { me = localStorage.getItem('wheelName') || ''; } catch {}
+let token = '';
+try { token = localStorage.getItem('wheelToken') || ''; } catch {}
 let rot = 0;                 // aktuelle Drehung in rad
 let spinning = false;
 let skew = 0;
 
 // ---------- API ----------
 async function api(method, url, body) {
-  const q = url + (url.includes('?') ? '&' : '?') + 'name=' + encodeURIComponent(me);
-  const r = await fetch(q, { method, headers: { 'content-type': 'application/json' }, body: method === 'GET' ? undefined : JSON.stringify({ ...(body || {}), me }) });
+  const r = await fetch(url, { method, headers: { 'content-type': 'application/json', 'x-token': token }, body: method === 'GET' ? undefined : JSON.stringify(body || {}) });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || 'Fehler');
+  if (!r.ok) {
+    if (r.status === 401 && token && !url.includes('/login')) setLogin('', ''); // Sitzung ungültig
+    throw new Error(j.error || 'Fehler');
+  }
   return j;
 }
 function apply(next) {
   skew = next.now - Date.now();
-  S = next;
+  S = next; if ((next.me || '') !== me) { me = next.me || ''; showMe(); }
   if (next.spin) animateSpin(next.spin);   // nur wer selbst dreht, bekommt das Ergebnis
   if (!spinning) draw();
   renderList(); renderMine(); renderResult();
@@ -361,17 +365,31 @@ async function add() {
 $('add').onclick = add;
 $('iname').addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
 
-// ---------- Name ----------
-$('nameField').value = me;
-$('nameField').oninput = () => {
-  me = $('nameField').value.trim().slice(0, 30);
-  try { localStorage.setItem('wheelName', me); } catch {}
-  myLast = null; updateSpinBtn();
-};
-$('nameField').onchange = () => poll();
+// ---------- Anmeldung ----------
+function showMe() {
+  $('loginBox').style.display = me ? 'none' : '';
+  $('meBox').style.display = me ? '' : 'none';
+  $('meName').textContent = me;
+}
+function setLogin(t, name) {
+  token = t; me = name; myLast = null;
+  try { t ? localStorage.setItem('wheelToken', t) : localStorage.removeItem('wheelToken'); } catch {}
+  showMe(); updateSpinBtn();
+}
+async function login() {
+  const name = $('nameField').value.trim(), pin = $('pinField').value;
+  try {
+    const j = await api('POST', '/api/login', { name, pin });
+    setLogin(j.token, j.name); $('pinField').value = ''; $('err').textContent = ''; await poll();
+  } catch (e) { $('err').textContent = e.message; alert(e.message); }
+}
+$('loginBtn').onclick = login;
+$('pinField').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+$('nameField').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('pinField').focus(); });
+$('logoutBtn').onclick = () => { setLogin('', ''); poll(); };
 function askName() {
   $('nameField').focus();
-  $('err').textContent = 'Trag zuerst oben deinen Namen ein.';
+  $('err').textContent = 'Melde dich zuerst oben an: Vorname und eine PIN, die nur du kennst.';
 }
 
 // ---------- Konfetti in Porsche-Farben ----------
