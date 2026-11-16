@@ -13,7 +13,7 @@ const PORT = Number(process.env.PORT || 3000);
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
-let state = { items: [], wins: [], busyUntil: 0, busyBy: null };
+let state = { items: [], wins: [], busyUntil: 0, busyBy: null, lock: { on: false, spinners: [] } };
 try {
   state = { ...state, ...JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) };
 } catch {}
@@ -24,6 +24,8 @@ function save() {
   fs.renameSync(tmp, DATA_FILE);
 }
 
+const MAX_LOCKED_SPINS = 2;
+const LOCKED = { error: 'Das Rad ist gesperrt' };
 const clean = (s, max) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 const weightOf = (w) => Math.min(10, Math.max(1, Math.round(Number(w) || 5)));
 
@@ -56,6 +58,7 @@ function readBody(req) {
 const publicState = (viewer = '') => ({
   items: state.items.map(({ id, name, owner, weight }) => ({ id, name, owner, weight })),
   mine: state.wins.filter((w) => w.by === viewer),
+  lock: { on: state.lock.on, spinners: state.lock.spinners, max: MAX_LOCKED_SPINS },
   busy: state.busyUntil > Date.now() ? state.busyBy : null,
   now: Date.now()
 });
@@ -72,6 +75,22 @@ async function api(req, res, url) {
     return json(res, 400, { error: 'Ungültige Anfrage' });
   }
   const me = clean(body.me ?? body.name ?? viewer, 30);
+
+  if (route === 'POST /api/lock') {
+    if (state.busyUntil > Date.now()) return json(res, 409, { error: 'Das Rad dreht gerade noch' });
+    state.lock = { on: true, spinners: [] };
+    save();
+    return json(res, 200, publicState(me));
+  }
+  if (route === 'POST /api/unlock') {
+    if (state.busyUntil > Date.now()) return json(res, 409, { error: 'Das Rad dreht gerade noch' });
+    state.lock = { on: false, spinners: [] };
+    save();
+    return json(res, 200, publicState(me));
+  }
+
+  const mutating = ['POST /api/items', 'POST /api/shuffle', 'POST /api/release'].includes(route) || /^\/api\/items\//.test(url.pathname);
+  if (state.lock.on && mutating) return json(res, 409, LOCKED);
 
   if (route === 'POST /api/items') {
     const name = clean(body.name, 80);
@@ -109,6 +128,10 @@ async function api(req, res, url) {
   if (route === 'POST /api/spin') {
     if (!me) return json(res, 400, { error: 'Dein Name fehlt' });
     if (state.busyUntil > Date.now()) return json(res, 409, { error: 'Das Rad dreht gerade noch' });
+    if (state.lock.on) {
+      if (state.lock.spinners.length >= MAX_LOCKED_SPINS) return json(res, 409, { error: `Gesperrt: es haben schon ${MAX_LOCKED_SPINS} Personen gedreht` });
+      if (state.lock.spinners.includes(me)) return json(res, 409, { error: 'Gesperrt: du hast schon gedreht, jetzt ist jemand anderes dran' });
+    }
     // Vergebene Wünsche bleiben im Rad (gleich gross), werden aber nie gezogen. Das sieht niemand.
     const open = state.items.filter((i) => !i.wonBy);
     if (!open.length) return json(res, 409, { error: 'Keine freien Wünsche mehr im Rad' });
@@ -123,6 +146,7 @@ async function api(req, res, url) {
       r -= i.weight;
     }
     pick.wonBy = me;
+    if (state.lock.on) state.lock.spinners.push(me);
     state.wins.push({ id: pick.id, name: pick.name, owner: pick.owner, weight: pick.weight, by: me, at: Date.now() });
     state.busyUntil = Date.now() + 8000;
     state.busyBy = me;

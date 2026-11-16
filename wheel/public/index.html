@@ -91,8 +91,9 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
       <div class="pointer"></div>
       <canvas id="wheel"></canvas>
     </div>
-    <div style="display:flex;gap:12px;align-items:center"><button class="btn red" id="spin">Drehen</button><button class="btn" id="shuffle" title="Reihenfolge der Stücke mischen">Mischen</button></div>
+    <div style="display:flex;gap:12px;align-items:center"><button class="btn red" id="spin">Drehen</button><button class="btn" id="shuffle" title="Reihenfolge der Stücke mischen">Mischen</button><button class="btn" id="lock">Sperren</button></div>
     <div class="result" id="result"></div>
+    <div class="joy" id="lockInfo" style="text-align:center"></div>
   </section>
 
   <aside>
@@ -127,7 +128,7 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
 <script>
 const $ = (id) => document.getElementById(id);
 const TAU = Math.PI * 2;
-let S = { items: [], mine: [], busy: null, now: Date.now() };
+let S = { items: [], mine: [], lock: { on: false, spinners: [], max: 2 }, busy: null, now: Date.now() };
 let me = '';
 try { me = localStorage.getItem('wheelName') || ''; } catch {}
 let rot = 0;                 // aktuelle Drehung in rad
@@ -276,9 +277,23 @@ function renderResult() {
   el.innerHTML = S.items.length ? '<div class="hint">Bereit. Wer dreht?</div>' : '';
 }
 function updateSpinBtn() {
-  $('shuffle').disabled = spinning || S.items.length < 2 || (!!S.busy && S.busy !== me);
-  $('spin').disabled = spinning || !S.items.length || !me || (!!S.busy && S.busy !== me);
+  const L = S.lock, busyOther = !!S.busy && S.busy !== me;
+  const done = L.on && L.spinners.length >= L.max, already = L.on && L.spinners.includes(me);
+  $('shuffle').disabled = spinning || L.on || S.items.length < 2 || busyOther;
+  $('spin').disabled = spinning || !S.items.length || !me || busyOther || done || already;
+  $('lock').textContent = L.on ? 'Entsperren' : 'Sperren';
+  $('lock').disabled = spinning || busyOther;
+  $('add').disabled = L.on;
+  $('lockInfo').textContent = !L.on ? '' : done ? `Gesperrt: ${L.max} von ${L.max} haben gedreht (${L.spinners.join(', ')}).`
+    : `Gesperrt: ${L.spinners.length} von ${L.max} Drehungen vergeben${L.spinners.length ? ' (' + L.spinners.join(', ') + ')' : ''}. Jede Person darf einmal.`;
 }
+$('lock').onclick = async () => {
+  if (spinning) return;
+  const on = S.lock.on;
+  if (!on && !confirm(`Rad sperren? Danach sind genau ${S.lock.max} Drehungen von ${S.lock.max} verschiedenen Personen möglich. Nichts lässt sich mehr ändern.`)) return;
+  if (on && !confirm('Rad entsperren? Die Zähler der Drehungen werden zurückgesetzt.')) return;
+  try { apply(await api('POST', on ? '/api/unlock' : '/api/lock')); } catch (e) { alert(e.message); }
+};
 $('shuffle').onclick = async () => {
   if (spinning) return;
   try { apply(await api('POST', '/api/shuffle')); } catch (e) { alert(e.message); }
@@ -298,7 +313,7 @@ function renderList() {
     const li = document.createElement('li');
     li.innerHTML = `<span class="dot" style="background:${colorFor(it.weight)}"></span>
       <div><div class="n">${esc(it.name)}</div><div class="m">Wunsch von ${esc(it.owner)}</div></div>
-      <div class="tools"><button class="ic" data-dn="${it.id}">−</button><span class="w">${it.weight}</span><button class="ic" data-up="${it.id}">+</button><button class="ic" title="Löschen" data-del="${it.id}">×</button></div>`;
+      <div class="tools">${S.lock.on ? `<span class="w">${it.weight}</span>` : `<button class="ic" data-dn="${it.id}">−</button><span class="w">${it.weight}</span><button class="ic" data-up="${it.id}">+</button><button class="ic" title="Löschen" data-del="${it.id}">×</button>`}</div>`;
     $('list').appendChild(li);
   }
   updateSpinBtn();
@@ -309,7 +324,7 @@ function renderMine() {
   for (const w of S.mine) {
     const li = document.createElement('li');
     li.innerHTML = `<span class="dot" style="background:var(--gold)"></span><div><div class="n">${esc(w.name)}</div><div class="m">Wunsch von ${esc(w.owner)}</div></div>
-      <div class="tools"><button class="ic" title="Zurück ins Rad" data-rel="${w.id}">↺</button></div>`;
+      <div class="tools">${S.lock.on ? '' : `<button class="ic" title="Zurück ins Rad" data-rel="${w.id}">↺</button>`}</div>`;
     $('mine').appendChild(li);
   }
 }
