@@ -133,6 +133,16 @@ async function api(req, res, url) {
     });
   }
 
+  if (route === 'POST /api/shuffle') {
+    if (state.busyUntil > Date.now()) return json(res, 409, { error: 'Das Rad dreht gerade noch' });
+    for (let i = state.items.length - 1; i > 0; i--) {
+      const j = crypto.randomInt(0, i + 1);
+      [state.items[i], state.items[j]] = [state.items[j], state.items[i]];
+    }
+    save();
+    return json(res, 200, publicState(me));
+  }
+
   if (route === 'POST /api/release') {
     const win = state.wins.find((w) => w.id === body.id && w.by === me);
     if (!win) return json(res, 404, { error: 'Nicht gefunden' });

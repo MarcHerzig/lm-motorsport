@@ -91,7 +91,7 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
       <div class="pointer"></div>
       <canvas id="wheel"></canvas>
     </div>
-    <button class="btn red" id="spin">Drehen</button>
+    <div style="display:flex;gap:12px;align-items:center"><button class="btn red" id="spin">Drehen</button><button class="btn" id="shuffle" title="Reihenfolge der Stücke mischen">Mischen</button></div>
     <div class="result" id="result"></div>
   </section>
 
@@ -276,8 +276,13 @@ function renderResult() {
   el.innerHTML = S.items.length ? '<div class="hint">Bereit. Wer dreht?</div>' : '';
 }
 function updateSpinBtn() {
+  $('shuffle').disabled = spinning || S.items.length < 2 || (!!S.busy && S.busy !== me);
   $('spin').disabled = spinning || !S.items.length || !me || (!!S.busy && S.busy !== me);
 }
+$('shuffle').onclick = async () => {
+  if (spinning) return;
+  try { apply(await api('POST', '/api/shuffle')); } catch (e) { alert(e.message); }
+};
 $('spin').onclick = async () => {
   if (!me) return askName();
   try { myLast = null; apply(await api('POST', '/api/spin')); } catch (e) { $('result').innerHTML = `<div class="hint" style="color:var(--red-hi)">${esc(e.message)}</div>`; }
@@ -286,7 +291,7 @@ $('spin').onclick = async () => {
 // ---------- Liste ----------
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function renderList() {
-  const items = [...S.items].sort((a, b) => b.weight - a.weight);
+  const items = S.items; // feste Reihenfolge, wie im Rad
   $('count').textContent = `${items.length} im Rad`;
   $('list').innerHTML = items.length ? '' : '<div class="empty">Noch nichts im Rad.</div>';
   for (const it of items) {
