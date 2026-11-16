@@ -110,6 +110,11 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
       <div class="err" id="err"></div>
     </div>
 
+    <div class="card" id="mineCard" style="display:none">
+      <h2>Dein Gewinn <span>nur du siehst das</span></h2>
+      <ul id="mine"></ul>
+    </div>
+
     <div class="card">
       <h2>Im Rad <span id="count"></span></h2>
       <ul id="list"></ul>
@@ -129,37 +134,30 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
 <script>
 const $ = (id) => document.getElementById(id);
 const TAU = Math.PI * 2;
-let S = { items: [], spin: null, now: Date.now() };
+let S = { items: [], mine: [], busy: null, now: Date.now() };
 let me = '';
 try { me = localStorage.getItem('wheelName') || ''; } catch {}
 let rot = 0;                 // aktuelle Drehung in rad
 let spinning = false;
-let lastSeenSpin = 0;
 let skew = 0;
-const wonBy = (it) => (spinning && S.spin && S.spin.itemId === it.id ? null : it.wonBy); // kein Spoiler während der Drehung                // Differenz Server/Client-Zeit
 
 // ---------- API ----------
 async function api(method, url, body) {
-  const r = await fetch(url, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const q = url + (url.includes('?') ? '&' : '?') + 'name=' + encodeURIComponent(me);
+  const r = await fetch(q, { method, headers: { 'content-type': 'application/json' }, body: method === 'GET' ? undefined : JSON.stringify({ ...(body || {}), me }) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || 'Fehler');
   return j;
 }
 function apply(next) {
   skew = next.now - Date.now();
-  const prev = S;
   S = next;
-  // Neue Drehung (von jemand anderem oder mir)?
-  if (S.spin && S.spin.n > lastSeenSpin) {
-    const age = Date.now() + skew - S.spin.at;
-    if (lastSeenSpin === 0 && age > 9000) { lastSeenSpin = S.spin.n; settleOn(S.spin); }
-    else { lastSeenSpin = S.spin.n; animateSpin(S.spin, Math.max(0, age)); }
-  }
+  if (next.spin) animateSpin(next.spin);   // nur wer selbst dreht, bekommt das Ergebnis
   if (!spinning) draw();
-  renderList();
-  renderResult();
+  renderList(); renderMine(); renderResult();
 }
 async function poll() {
+  if (spinning) return;
   try { apply(await api('GET', '/api/state')); } catch {}
 }
 setInterval(poll, 2500);
@@ -176,8 +174,7 @@ function slices() {
     return sl;
   });
 }
-function colorFor(w, won) {
-  if (won) return '#23262b';
+function colorFor(w) {
   // 1 = Graphit, 10 = Porsche-Rot
   const t = (w - 1) / 9;
   const from = [74, 78, 86], to = [213, 0, 28];
@@ -218,16 +215,9 @@ function draw() {
     return;
   }
   for (const s of sl) {
-    const won = !!wonBy(s.it);
     const a0 = s.a0 - Math.PI / 2, a1 = s.a1 - Math.PI / 2;
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, a0, a1); ctx.closePath();
-    ctx.fillStyle = colorFor(s.it.weight, won); ctx.fill();
-    if (won) { // Schraffur für vergebene Stücke
-      ctx.save(); ctx.clip();
-      ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 2;
-      for (let k = -R * 2; k < R * 2; k += 10) { ctx.beginPath(); ctx.moveTo(k, -R); ctx.lineTo(k + R, R); ctx.stroke(); }
-      ctx.restore();
-    }
+    ctx.fillStyle = colorFor(s.it.weight); ctx.fill();
     ctx.strokeStyle = '#0b0c0e'; ctx.lineWidth = 2.5; ctx.stroke();
 
     // Beschriftung entlang des Radius
@@ -237,15 +227,11 @@ function draw() {
     const fs = Math.max(10, Math.min(size * 0.036, R * span * 0.5));
     if (fs >= 10) {
       ctx.font = `600 ${fs}px Inter`;
-      ctx.fillStyle = won ? '#6b6f77' : '#fff';
+      ctx.fillStyle = '#fff';
       let t = s.it.name; const maxW = R * 0.78;
       while (ctx.measureText(t).width > maxW && t.length > 3) t = t.slice(0, -2);
       if (t !== s.it.name) t += '…';
       ctx.fillText(t, R - 16, 0);
-      if (won && fs > 11) {
-        ctx.font = `600 ${fs * 0.72}px Oswald`; ctx.fillStyle = '#c8a24a';
-        ctx.fillText(('→ ' + wonBy(s.it)).toUpperCase(), R - 16 - ctx.measureText(t).width - 14, 0);
-      }
     }
     ctx.restore();
   }
@@ -269,71 +255,68 @@ function targetRot(sp) {
   const base = ((-at) % TAU + TAU) % TAU; // Rotation, die diesen Punkt unter den Zeiger bringt
   return base;
 }
-function settleOn(sp) {
-  const b = targetRot(sp);
-  if (b !== null) rot = b;
-  draw();
-}
 const DUR = 6500;
-function animateSpin(sp, elapsed) {
+function animateSpin(sp) {
   const b = targetRot(sp);
   if (b === null) { draw(); return; }
   const startRot = rot;
   let end = b; while (end < startRot + TAU * 5) end += TAU;
   spinning = true; $('spin').disabled = true; renderList();
-  const t0 = performance.now() - elapsed;
+  const t0 = performance.now();
   const ease = (t) => 1 - Math.pow(1 - t, 4);
   (function frame(now) {
     const t = Math.min(1, (now - t0) / DUR);
     rot = startRot + (end - startRot) * ease(t);
     draw();
     if (t < 1) return requestAnimationFrame(frame);
-    rot = b; spinning = false; draw(); renderList(); updateSpinBtn();
-    shownResultN = sp.n; renderResult(); confetti();
+    rot = b; spinning = false; draw(); updateSpinBtn();
+    myLast = S.items.find((i) => i.id === sp.itemId); renderResult(); renderMine(); confetti();
   })(performance.now());
 }
 
-let shownResultN = 0;
+let myLast = null;
 function renderResult() {
   const el = $('result');
-  const sp = S.spin;
   if (spinning) { el.innerHTML = '<div class="hint">Das Rad dreht …</div>'; return; }
-  if (sp) {
-    const it = S.items.find((i) => i.id === sp.itemId);
-    if (it) { el.innerHTML = `<div class="who">${esc(sp.by)} zieht</div><div class="what">${esc(it.name)}</div>`; return; }
-  }
-  const open = S.items.filter((i) => !i.wonBy).length;
-  el.innerHTML = open ? '<div class="hint">Bereit. Wer dreht?</div>' : '<div class="hint">Alle Wünsche sind vergeben.</div>';
+  if (myLast) { el.innerHTML = `<div class="who">Du ziehst</div><div class="what">${esc(myLast.name)}</div><div class="hint">Nur du siehst das.</div>`; return; }
+  if (S.busy && S.busy !== me) { el.innerHTML = `<div class="hint">${esc(S.busy)} dreht gerade …</div>`; return; }
+  el.innerHTML = S.items.length ? '<div class="hint">Bereit. Wer dreht?</div>' : '';
 }
 function updateSpinBtn() {
-  const open = S.items.filter((i) => !wonBy(i)).length;
-  $('spin').disabled = spinning || !open || !me;
+  $('spin').disabled = spinning || !S.items.length || !me || (!!S.busy && S.busy !== me);
 }
 $('spin').onclick = async () => {
   if (!me) return askName();
-  try { apply(await api('POST', '/api/spin', { name: me })); } catch (e) { $('result').innerHTML = `<div class="hint" style="color:var(--red-hi)">${esc(e.message)}</div>`; }
+  try { myLast = null; apply(await api('POST', '/api/spin')); } catch (e) { $('result').innerHTML = `<div class="hint" style="color:var(--red-hi)">${esc(e.message)}</div>`; }
 };
 
 // ---------- Liste ----------
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function renderList() {
-  const items = [...S.items].sort((a, b) => (!!wonBy(a) - !!wonBy(b)) || b.weight - a.weight);
-  $('count').textContent = `${S.items.filter((i) => !wonBy(i)).length} frei · ${S.items.filter((i) => wonBy(i)).length} vergeben`;
+  const items = [...S.items].sort((a, b) => b.weight - a.weight);
+  $('count').textContent = `${items.length} im Rad`;
   $('list').innerHTML = items.length ? '' : '<div class="empty">Noch nichts im Rad.</div>';
   for (const it of items) {
     const li = document.createElement('li');
-    const wb = wonBy(it);
-    if (wb) li.className = 'won';
-    li.innerHTML = `<span class="dot" style="background:${colorFor(it.weight, !!wb)}"></span>
-      <div><div class="n">${esc(it.name)}</div><div class="m">von ${esc(it.owner)}${wb ? ` · gezogen von <b>${esc(wb)}</b>` : ''}</div></div>
-      <div class="tools">${wb
-        ? `<button class="ic" title="Zurück ins Rad" data-rel="${it.id}">↺</button>`
-        : `<button class="ic" data-dn="${it.id}">−</button><span class="w">${it.weight}</span><button class="ic" data-up="${it.id}">+</button><button class="ic" title="Löschen" data-del="${it.id}">×</button>`}</div>`;
+    li.innerHTML = `<span class="dot" style="background:${colorFor(it.weight)}"></span>
+      <div><div class="n">${esc(it.name)}</div><div class="m">Wunsch von ${esc(it.owner)}</div></div>
+      <div class="tools"><button class="ic" data-dn="${it.id}">−</button><span class="w">${it.weight}</span><button class="ic" data-up="${it.id}">+</button><button class="ic" title="Löschen" data-del="${it.id}">×</button></div>`;
     $('list').appendChild(li);
   }
   updateSpinBtn();
 }
-$('list').onclick = async (e) => {
+function renderMine() {
+  $('mineCard').style.display = S.mine.length ? '' : 'none';
+  $('mine').innerHTML = '';
+  for (const w of S.mine) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="dot" style="background:var(--gold)"></span><div><div class="n">${esc(w.name)}</div><div class="m">Wunsch von ${esc(w.owner)}</div></div>
+      <div class="tools"><button class="ic" title="Zurück ins Rad" data-rel="${w.id}">↺</button></div>`;
+    $('mine').appendChild(li);
+  }
+}
+document.addEventListener('click', async (e) => {
+  if (!e.target.closest('#list, #mine')) return;
   const b = e.target.closest('button'); if (!b || spinning) return;
   const d = b.dataset;
   try {
@@ -344,11 +327,11 @@ $('list').onclick = async (e) => {
       const it = S.items.find((i) => i.id === d.del);
       if (confirm(`„${it.name}" aus dem Rad nehmen?`)) apply(await api('DELETE', `/api/items/${d.del}`));
     } else if (d.rel) {
-      const it = S.items.find((i) => i.id === d.rel);
-      if (confirm(`„${it.name}" zurück ins Rad legen? ${it.wonBy} verliert den Gewinn.`)) apply(await api('POST', '/api/release', { id: d.rel }));
+      const w = S.mine.find((i) => i.id === d.rel);
+      if (confirm(`„${w.name}" zurück ins Rad legen?`)) { myLast = null; apply(await api('POST', '/api/release', { id: d.rel })); }
     }
   } catch (err) { alert(err.message); }
-};
+});
 
 // ---------- Hinzufügen ----------
 $('iweight').oninput = () => ($('iweightV').textContent = $('iweight').value);
@@ -375,7 +358,7 @@ function askName() {
 $('changeName').onclick = askName;
 $('nameForm').onsubmit = () => {
   const v = $('nameInput').value.trim().slice(0, 30);
-  if (v) { me = v; try { localStorage.setItem('wheelName', me); } catch {} showMe(); updateSpinBtn(); }
+  if (v) { me = v; try { localStorage.setItem('wheelName', me); } catch {} showMe(); myLast = null; poll(); }
 };
 
 // ---------- Konfetti in Porsche-Farben ----------
