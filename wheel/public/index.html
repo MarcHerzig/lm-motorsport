@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wunschrad · LM Motorsport</title>
+<meta name="theme-color" content="#0b0c0e">
+<style>
+@font-face{font-family:Oswald;font-weight:600;src:url(/fonts/oswald-latin-600-normal.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Oswald;font-weight:700;src:url(/fonts/oswald-latin-700-normal.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Inter;font-weight:400;src:url(/fonts/inter-latin-400-normal.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Inter;font-weight:600;src:url(/fonts/inter-latin-600-normal.woff2) format("woff2");font-display:swap}
+:root{
+  --bg:#0b0c0e;--surface:#16181c;--surface2:#1d2025;--border:#2a2d33;
+  --ink:#f5f5f3;--muted:#9ca0a8;--red:#d5001c;--red-hi:#ff2a43;--gold:#c8a24a;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;min-height:100vh;
+  background-image:radial-gradient(900px 500px at 70% -10%,rgba(213,0,28,.14),transparent 60%)}
+h1,h2,h3{font-family:Oswald,sans-serif;text-transform:uppercase;letter-spacing:.06em;margin:0;font-weight:700}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 24px;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:14px}
+.stripe{width:6px;height:34px;background:var(--red)}
+.brand h1{font-size:22px;line-height:1}
+.brand small{display:block;color:var(--muted);font-family:Oswald;letter-spacing:.2em;font-size:11px;text-transform:uppercase;margin-top:4px}
+.me{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.me b{color:var(--ink);font-weight:600}
+button,input{font:inherit}
+.btn{font-family:Oswald;text-transform:uppercase;letter-spacing:.08em;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--ink);padding:10px 18px;border-radius:2px;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--muted)}
+.btn.red{background:var(--red);border-color:var(--red)}
+.btn.red:hover{background:var(--red-hi);border-color:var(--red-hi)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:12px}
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;max-width:1280px;margin:0 auto;padding:24px}
+@media(max-width:980px){main{grid-template-columns:1fr;padding:16px}}
+.stage{display:flex;flex-direction:column;align-items:center;gap:20px}
+.wheelwrap{position:relative;width:min(100%,640px);aspect-ratio:1}
+canvas{width:100%;height:100%;display:block}
+.pointer{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;
+  border-left:18px solid transparent;border-right:18px solid transparent;border-top:44px solid var(--red);
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.7));z-index:2}
+.pointer::after{content:"";position:absolute;left:-5px;top:-40px;width:10px;height:10px;border-radius:50%;background:#fff;opacity:.85}
+#spin{font-size:22px;padding:16px 56px}
+.result{min-height:84px;text-align:center}
+.result .who{font-family:Oswald;letter-spacing:.2em;text-transform:uppercase;color:var(--red-hi);font-size:13px}
+.result .what{font-family:Oswald;font-weight:700;text-transform:uppercase;font-size:34px;letter-spacing:.04em;margin-top:4px}
+.result .hint{color:var(--muted);font-size:14px}
+aside{display:flex;flex-direction:column;gap:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:18px}
+.card h2{font-size:15px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.card h2 span{color:var(--muted);font-family:Inter;letter-spacing:0;text-transform:none;font-weight:400;font-size:13px}
+label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-family:Oswald;margin:12px 0 6px}
+input[type=text]{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--ink);padding:10px 12px;border-radius:2px;outline:none}
+input[type=text]:focus{border-color:var(--red)}
+.wrow{display:flex;align-items:center;gap:14px}
+input[type=range]{flex:1;accent-color:var(--red)}
+.wval{font-family:Oswald;font-weight:700;font-size:28px;min-width:44px;text-align:right;color:var(--red-hi)}
+.joy{font-size:12px;color:var(--muted);margin-top:4px}
+ul{list-style:none;margin:0;padding:0;max-height:420px;overflow:auto}
+li{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--border)}
+li:first-child{border-top:0}
+li .dot{width:12px;height:12px;border-radius:50%}
+li .n{font-weight:600;font-size:14px;overflow-wrap:anywhere}
+li .m{font-size:12px;color:var(--muted)}
+li .tools{display:flex;align-items:center;gap:6px}
+li .w{font-family:Oswald;font-weight:700;font-size:18px;min-width:22px;text-align:center}
+li.won .n{text-decoration:line-through;color:var(--muted)}
+li.won .m b{color:var(--gold);font-weight:600}
+.ic{background:none;border:1px solid var(--border);color:var(--muted);width:26px;height:26px;border-radius:2px;cursor:pointer;line-height:1}
+.ic:hover{color:var(--ink);border-color:var(--muted)}
+.err{color:var(--red-hi);font-size:13px;min-height:18px;margin-top:8px}
+dialog{background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:4px;padding:24px;width:min(360px,92vw)}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+.empty{color:var(--muted);font-size:14px;padding:6px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="stripe"></div>
+    <div><h1>Wunschrad</h1><small>LM Motorsport · Garage</small></div>
+  </div>
+  <div class="me">Du bist <b id="meName">?</b> <button class="btn sm" id="changeName">ändern</button></div>
+</header>
+
+<main>
+  <section class="stage">
+    <div class="wheelwrap">
+      <div class="pointer"></div>
+      <canvas id="wheel"></canvas>
+    </div>
+    <button class="btn red" id="spin">Drehen</button>
+    <div class="result" id="result"></div>
+  </section>
+
+  <aside>
+    <div class="card">
+      <h2>Wunsch einkippen</h2>
+      <label for="iname">Was wünschst du dir?</label>
+      <input type="text" id="iname" maxlength="80" placeholder="z. B. Torque-Wrench 1/2″" autocomplete="off">
+      <label for="iweight">Wie fest würde es dich freuen?</label>
+      <div class="wrow">
+        <input type="range" id="iweight" min="1" max="10" value="5">
+        <div class="wval" id="iweightV">5</div>
+      </div>
+      <div class="joy">1 = nett, 10 = ausflippen. Je höher, desto grösser das Stück im Rad.</div>
+      <div style="margin-top:14px"><button class="btn red" id="add" style="width:100%">In das Rad kippen</button></div>
+      <div class="err" id="err"></div>
+    </div>
+
+    <div class="card">
+      <h2>Im Rad <span id="count"></span></h2>
+      <ul id="list"></ul>
+    </div>
+  </aside>
+</main>
+
+<dialog id="nameDlg">
+  <form method="dialog" id="nameForm">
+    <h2 style="margin-bottom:6px">Wer bist du?</h2>
+    <div class="joy" style="margin-bottom:6px">Nur Vorname. Damit sieht das Rad, wer was zieht.</div>
+    <input type="text" id="nameInput" maxlength="30" autocomplete="off">
+    <div style="margin-top:16px;text-align:right"><button class="btn red" id="nameOk" value="ok">Los</button></div>
+  </form>
+</dialog>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const TAU = Math.PI * 2;
+let S = { items: [], spin: null, now: Date.now() };
+let me = '';
+try { me = localStorage.getItem('wheelName') || ''; } catch {}
+let rot = 0;                 // aktuelle Drehung in rad
+let spinning = false;
+let lastSeenSpin = 0;
+let skew = 0;
+const wonBy = (it) => (spinning && S.spin && S.spin.itemId === it.id ? null : it.wonBy); // kein Spoiler während der Drehung                // Differenz Server/Client-Zeit
+
+// ---------- API ----------
+async function api(method, url, body) {
+  const r = await fetch(url, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Fehler');
+  return j;
+}
+function apply(next) {
+  skew = next.now - Date.now();
+  const prev = S;
+  S = next;
+  // Neue Drehung (von jemand anderem oder mir)?
+  if (S.spin && S.spin.n > lastSeenSpin) {
+    const age = Date.now() + skew - S.spin.at;
+    if (lastSeenSpin === 0 && age > 9000) { lastSeenSpin = S.spin.n; settleOn(S.spin); }
+    else { lastSeenSpin = S.spin.n; animateSpin(S.spin, Math.max(0, age)); }
+  }
+  if (!spinning) draw();
+  renderList();
+  renderResult();
+}
+async function poll() {
+  try { apply(await api('GET', '/api/state')); } catch {}
+}
+setInterval(poll, 2500);
+
+// ---------- Geometrie ----------
+// Stücke in fester Reihenfolge, Winkel proportional zum Gewicht. Start oben, im Uhrzeigersinn.
+function slices() {
+  const total = S.items.reduce((s, i) => s + i.weight, 0) || 1;
+  let a = 0;
+  return S.items.map((it) => {
+    const span = (it.weight / total) * TAU;
+    const sl = { it, a0: a, a1: a + span };
+    a += span;
+    return sl;
+  });
+}
+function colorFor(w, won) {
+  if (won) return '#23262b';
+  // 1 = Graphit, 10 = Porsche-Rot
+  const t = (w - 1) / 9;
+  const from = [74, 78, 86], to = [213, 0, 28];
+  const c = from.map((f, i) => Math.round(f + (to[i] - f) * t));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+// ---------- Zeichnen ----------
+const cv = $('wheel'), ctx = cv.getContext('2d');
+function draw() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const size = cv.clientWidth;
+  if (cv.width !== Math.round(size * dpr)) { cv.width = cv.height = Math.round(size * dpr); }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, size, size);
+  const c = size / 2, R = c - 14;
+
+  // Aussenring mit Skalenstrichen wie ein Drehzahlmesser
+  ctx.beginPath(); ctx.arc(c, c, c - 4, 0, TAU); ctx.fillStyle = '#101214'; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = '#2a2d33'; ctx.stroke();
+  ctx.save(); ctx.translate(c, c); ctx.rotate(rot);
+  for (let i = 0; i < 72; i++) {
+    const a = (i / 72) * TAU - Math.PI / 2, big = i % 6 === 0;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * (R + 4), Math.sin(a) * (R + 4));
+    ctx.lineTo(Math.cos(a) * (R + (big ? 12 : 8)), Math.sin(a) * (R + (big ? 12 : 8)));
+    ctx.strokeStyle = big ? '#9ca0a8' : '#43474f'; ctx.lineWidth = big ? 2 : 1; ctx.stroke();
+  }
+
+  const sl = slices();
+  if (!sl.length) {
+    ctx.restore();
+    ctx.fillStyle = '#9ca0a8'; ctx.textAlign = 'center';
+    ctx.font = `600 ${size * 0.04}px Oswald`;
+    ctx.fillText('NOCH LEER', c, c - 6);
+    ctx.font = `${size * 0.026}px Inter`;
+    ctx.fillText('Kipp den ersten Wunsch ein', c, c + size * 0.04);
+    return;
+  }
+  for (const s of sl) {
+    const won = !!wonBy(s.it);
+    const a0 = s.a0 - Math.PI / 2, a1 = s.a1 - Math.PI / 2;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, a0, a1); ctx.closePath();
+    ctx.fillStyle = colorFor(s.it.weight, won); ctx.fill();
+    if (won) { // Schraffur für vergebene Stücke
+      ctx.save(); ctx.clip();
+      ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 2;
+      for (let k = -R * 2; k < R * 2; k += 10) { ctx.beginPath(); ctx.moveTo(k, -R); ctx.lineTo(k + R, R); ctx.stroke(); }
+      ctx.restore();
+    }
+    ctx.strokeStyle = '#0b0c0e'; ctx.lineWidth = 2.5; ctx.stroke();
+
+    // Beschriftung entlang des Radius
+    const mid = (a0 + a1) / 2, span = a1 - a0;
+    ctx.save(); ctx.rotate(mid);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    const fs = Math.max(10, Math.min(size * 0.036, R * span * 0.5));
+    if (fs >= 10) {
+      ctx.font = `600 ${fs}px Inter`;
+      ctx.fillStyle = won ? '#6b6f77' : '#fff';
+      let t = s.it.name; const maxW = R * 0.78;
+      while (ctx.measureText(t).width > maxW && t.length > 3) t = t.slice(0, -2);
+      if (t !== s.it.name) t += '…';
+      ctx.fillText(t, R - 16, 0);
+      if (won && fs > 11) {
+        ctx.font = `600 ${fs * 0.72}px Oswald`; ctx.fillStyle = '#c8a24a';
+        ctx.fillText(('→ ' + wonBy(s.it)).toUpperCase(), R - 16 - ctx.measureText(t).width - 14, 0);
+      }
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // Nabe
+  const g = ctx.createRadialGradient(c, c, 4, c, c, 44);
+  g.addColorStop(0, '#2a2d33'); g.addColorStop(1, '#0b0c0e');
+  ctx.beginPath(); ctx.arc(c, c, 42, 0, TAU); ctx.fillStyle = g; ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = '#d5001c'; ctx.stroke();
+  ctx.fillStyle = '#f5f5f3'; ctx.font = `700 ${size * 0.03}px Oswald`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('LM', c, c + 1);
+}
+window.addEventListener('resize', () => !spinning && draw());
+
+// ---------- Drehen ----------
+function targetRot(sp) {
+  const s = slices().find((x) => x.it.id === sp.itemId);
+  if (!s) return null;
+  const at = s.a0 + (s.a1 - s.a0) * sp.offset;
+  const base = ((-at) % TAU + TAU) % TAU; // Rotation, die diesen Punkt unter den Zeiger bringt
+  return base;
+}
+function settleOn(sp) {
+  const b = targetRot(sp);
+  if (b !== null) rot = b;
+  draw();
+}
+const DUR = 6500;
+function animateSpin(sp, elapsed) {
+  const b = targetRot(sp);
+  if (b === null) { draw(); return; }
+  const startRot = rot;
+  let end = b; while (end < startRot + TAU * 5) end += TAU;
+  spinning = true; $('spin').disabled = true; renderList();
+  const t0 = performance.now() - elapsed;
+  const ease = (t) => 1 - Math.pow(1 - t, 4);
+  (function frame(now) {
+    const t = Math.min(1, (now - t0) / DUR);
+    rot = startRot + (end - startRot) * ease(t);
+    draw();
+    if (t < 1) return requestAnimationFrame(frame);
+    rot = b; spinning = false; draw(); renderList(); updateSpinBtn();
+    shownResultN = sp.n; renderResult(); confetti();
+  })(performance.now());
+}
+
+let shownResultN = 0;
+function renderResult() {
+  const el = $('result');
+  const sp = S.spin;
+  if (spinning) { el.innerHTML = '<div class="hint">Das Rad dreht …</div>'; return; }
+  if (sp) {
+    const it = S.items.find((i) => i.id === sp.itemId);
+    if (it) { el.innerHTML = `<div class="who">${esc(sp.by)} zieht</div><div class="what">${esc(it.name)}</div>`; return; }
+  }
+  const open = S.items.filter((i) => !i.wonBy).length;
+  el.innerHTML = open ? '<div class="hint">Bereit. Wer dreht?</div>' : '<div class="hint">Alle Wünsche sind vergeben.</div>';
+}
+function updateSpinBtn() {
+  const open = S.items.filter((i) => !wonBy(i)).length;
+  $('spin').disabled = spinning || !open || !me;
+}
+$('spin').onclick = async () => {
+  if (!me) return askName();
+  try { apply(await api('POST', '/api/spin', { name: me })); } catch (e) { $('result').innerHTML = `<div class="hint" style="color:var(--red-hi)">${esc(e.message)}</div>`; }
+};
+
+// ---------- Liste ----------
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function renderList() {
+  const items = [...S.items].sort((a, b) => (!!wonBy(a) - !!wonBy(b)) || b.weight - a.weight);
+  $('count').textContent = `${S.items.filter((i) => !wonBy(i)).length} frei · ${S.items.filter((i) => wonBy(i)).length} vergeben`;
+  $('list').innerHTML = items.length ? '' : '<div class="empty">Noch nichts im Rad.</div>';
+  for (const it of items) {
+    const li = document.createElement('li');
+    const wb = wonBy(it);
+    if (wb) li.className = 'won';
+    li.innerHTML = `<span class="dot" style="background:${colorFor(it.weight, !!wb)}"></span>
+      <div><div class="n">${esc(it.name)}</div><div class="m">von ${esc(it.owner)}${wb ? ` · gezogen von <b>${esc(wb)}</b>` : ''}</div></div>
+      <div class="tools">${wb
+        ? `<button class="ic" title="Zurück ins Rad" data-rel="${it.id}">↺</button>`
+        : `<button class="ic" data-dn="${it.id}">−</button><span class="w">${it.weight}</span><button class="ic" data-up="${it.id}">+</button><button class="ic" title="Löschen" data-del="${it.id}">×</button>`}</div>`;
+    $('list').appendChild(li);
+  }
+  updateSpinBtn();
+}
+$('list').onclick = async (e) => {
+  const b = e.target.closest('button'); if (!b || spinning) return;
+  const d = b.dataset;
+  try {
+    if (d.up || d.dn) {
+      const id = d.up || d.dn, it = S.items.find((i) => i.id === id);
+      apply(await api('PATCH', `/api/items/${id}`, { weight: it.weight + (d.up ? 1 : -1) }));
+    } else if (d.del) {
+      const it = S.items.find((i) => i.id === d.del);
+      if (confirm(`„${it.name}" aus dem Rad nehmen?`)) apply(await api('DELETE', `/api/items/${d.del}`));
+    } else if (d.rel) {
+      const it = S.items.find((i) => i.id === d.rel);
+      if (confirm(`„${it.name}" zurück ins Rad legen? ${it.wonBy} verliert den Gewinn.`)) apply(await api('POST', '/api/release', { id: d.rel }));
+    }
+  } catch (err) { alert(err.message); }
+};
+
+// ---------- Hinzufügen ----------
+$('iweight').oninput = () => ($('iweightV').textContent = $('iweight').value);
+async function add() {
+  if (!me) return askName();
+  const name = $('iname').value.trim();
+  if (!name) { $('err').textContent = 'Schreib zuerst, was du dir wünschst.'; return; }
+  $('err').textContent = '';
+  try {
+    apply(await api('POST', '/api/items', { name, owner: me, weight: $('iweight').value }));
+    $('iname').value = ''; $('iname').focus();
+  } catch (e) { $('err').textContent = e.message; }
+}
+$('add').onclick = add;
+$('iname').onkeydown = (e) => e.key === 'Enter' && add();
+
+// ---------- Name ----------
+function showMe() { $('meName').textContent = me || '?'; }
+function askName() {
+  $('nameInput').value = me;
+  $('nameDlg').showModal();
+  $('nameInput').focus();
+}
+$('changeName').onclick = askName;
+$('nameForm').onsubmit = () => {
+  const v = $('nameInput').value.trim().slice(0, 30);
+  if (v) { me = v; try { localStorage.setItem('wheelName', me); } catch {} showMe(); updateSpinBtn(); }
+};
+
+// ---------- Konfetti in Porsche-Farben ----------
+function confetti() {
+  const cc = document.createElement('canvas');
+  Object.assign(cc.style, { position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 50 });
+  cc.width = innerWidth; cc.height = innerHeight; document.body.appendChild(cc);
+  const g = cc.getContext('2d'), cols = ['#d5001c', '#ff2a43', '#f5f5f3', '#c8a24a', '#9ca0a8'];
+  const ps = Array.from({ length: 140 }, () => ({ x: innerWidth / 2, y: innerHeight * 0.4, vx: (Math.random() - .5) * 16, vy: -Math.random() * 14 - 4, s: 5 + Math.random() * 6, c: cols[Math.random() * cols.length | 0], r: Math.random() * 6 }));
+  let f = 0;
+  (function tick() {
+    g.clearRect(0, 0, cc.width, cc.height);
+    for (const p of ps) { p.vy += .4; p.x += p.vx; p.y += p.vy; p.r += .2; g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); g.restore(); }
+    if (++f < 110) requestAnimationFrame(tick); else cc.remove();
+  })();
+}
+
+// ---------- Start ----------
+showMe();
+(async () => {
+  await poll();
+  if (!me) askName();
+})();
+</script>
+</body>
+</html>

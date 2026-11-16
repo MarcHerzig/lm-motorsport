@@ -24,3 +24,8 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/${{ env.OWNER }}/lm-motorsport:latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./wheel
+          push: true
+          tags: ghcr.io/${{ env.OWNER }}/lm-wheel:latest
