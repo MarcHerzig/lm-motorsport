@@ -45,14 +45,15 @@ const uid = () => crypto.randomBytes(6).toString('hex');
 // Teile, die pro Fahrzeug gemerkt werden. menge = Standardmenge.
 const TEILE = [
   { k: 'oel', label: 'Motoröl', grp: 'Service', menge: 5, unit: 'l', hint: 'Sorte/Spezifikation, Menge in Litern, Preis pro Liter' },
-  { k: 'oelfilter', label: 'Ölfilter', grp: 'Service', menge: 1 },
-  { k: 'luftfilter', label: 'Luftfilter', grp: 'Service', menge: 1 },
-  { k: 'innenraumfilter', label: 'Innenraumfilter', grp: 'Service', menge: 1 },
+  { k: 'oelfilter', label: 'Ölfilter', grp: 'Service', menge: 1, defBez: 'MANN-FILTER' },
+  { k: 'luftfilter', label: 'Luftfilter', grp: 'Service', menge: 1, defBez: 'MANN-FILTER' },
+  { k: 'innenraumfilter', label: 'Innenraumfilter', grp: 'Service', menge: 1, defBez: 'MANN-FILTER' },
   { k: 'zuendkerzen', label: 'Zündkerzen', grp: 'Service', menge: 4, unit: 'Stk' },
-  { k: 'scheiben_v', label: 'Bremsscheiben vorne', grp: 'Bremsen', menge: 2, unit: 'Stk' },
-  { k: 'belaege_v', label: 'Bremsbeläge vorne', grp: 'Bremsen', menge: 1, unit: 'Satz' },
-  { k: 'scheiben_h', label: 'Bremsscheiben hinten', grp: 'Bremsen', menge: 2, unit: 'Stk' },
-  { k: 'belaege_h', label: 'Bremsbeläge hinten', grp: 'Bremsen', menge: 1, unit: 'Satz' },
+  { k: 'bremsfl', label: 'Bremsflüssigkeit wechseln', grp: 'Service', menge: 1, unit: 'l', defBez: 'Brembo DOT 4', defPreis: 'bremsfluessigkeit' },
+  { k: 'scheiben_v', label: 'Bremsscheiben vorne', grp: 'Bremsen', defBez: 'Brembo', menge: 2, unit: 'Stk' },
+  { k: 'belaege_v', label: 'Bremsbeläge vorne', grp: 'Bremsen', defBez: 'Brembo', menge: 1, unit: 'Satz' },
+  { k: 'scheiben_h', label: 'Bremsscheiben hinten', grp: 'Bremsen', defBez: 'Brembo', menge: 2, unit: 'Stk' },
+  { k: 'belaege_h', label: 'Bremsbeläge hinten', grp: 'Bremsen', defBez: 'Brembo', menge: 1, unit: 'Satz' },
   { k: 'reifensatz', label: 'Reifen', grp: 'Reifen', menge: 4, unit: 'Stk' }
 ];
 const SERVICE_DEFAULT_ON = ['oel', 'oelfilter', 'luftfilter', 'innenraumfilter'];
@@ -143,6 +144,9 @@ label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:.2rem}
 .err{color:var(--bad)}.pos{display:grid;grid-template-columns:26px 1.6fr 1.1fr 70px 90px 90px;gap:.4rem;align-items:center;padding:.35rem 0;border-bottom:1px solid var(--border)}
 .pos.head{color:var(--muted);font-size:.78rem}
 .pos .tot{text-align:right;white-space:nowrap}
+details.card>summary{cursor:pointer;font:500 1.15rem Oswald,Impact,sans-serif;letter-spacing:.03em;list-style:none;margin:-.2rem 0 .2rem}
+details.card>summary::before{content:'▸ ';color:var(--muted)}details.card[open]>summary::before{content:'▾ '}
+details.card[open]>summary{margin-bottom:.6rem}
 @media(max-width:760px){.pos{grid-template-columns:26px 1fr 1fr}.pos.head{display:none}.pos .tot{grid-column:2/4}}
 .sum{margin-left:auto;max-width:340px}.sum td{border:0;padding:.2rem .5rem}.sum tr.t td{font-weight:700;font-size:1.1rem;border-top:2px solid var(--ink)}
 `;
@@ -181,8 +185,6 @@ function buildOffer(form, vehicle) {
   if (entsorgung) positionen.push({ key: 'entsorgung', label: 'Entsorgung pauschal', bez: '', nr: '', menge: 1, unit: '', preis: entsorgung });
   if (get('on_reifen') === '1')
     positionen.push({ key: 'reifen', label: 'Reifenmontage', bez: get('reifen_text').trim(), nr: '', menge: 1, unit: '', preis: num(get('preis_reifen'), s.reifenmontage) });
-  if (get('on_bremsfl') === '1')
-    positionen.push({ key: 'bremsfl', label: 'Bremsflüssigkeit wechseln', bez: '', nr: '', menge: 1, unit: '', preis: num(get('preis_bremsfl'), s.bremsfluessigkeit) });
   for (let i = 1; i <= 80; i++) {
     const b = get(`frei_bez_${i}`).trim();
     if (b) positionen.push({ key: 'frei', label: b, bez: get(`frei_info_${i}`).trim(), nr: get(`frei_nr_${i}`).trim(), menge: num(get(`frei_menge_${i}`), 1), unit: '', preis: num(get(`frei_preis_${i}`)) });
@@ -344,7 +346,7 @@ function offerFormPage(v, von, edit) {
   const rowFor = (t) => {
     const saved = v.teile?.[t.k] || {};
     const pos = base?.positionen.find((p) => p.key === t.k);
-    const p = pos || saved;
+    const p = pos || { ...saved, bez: saved.bez || t.defBez || '', preis: saved.preis ?? (t.defPreis ? s[t.defPreis] : undefined) };
     const on = base ? !!pos : t.grp === 'Service' && SERVICE_DEFAULT_ON.includes(t.k);
     return `<div class="pos"><input type="checkbox" name="on_${t.k}" value="1" ${on ? 'checked' : ''} class="calc">
 <div><input name="bez_${t.k}" value="${e(p.bez)}" placeholder="${t.k === 'oel' ? 'z.B. Castrol Edge 5W-30 LL' : t.k === 'reifensatz' ? 'z.B. Michelin Pilot Sport 4 225/45 R17' : 'Hersteller / Bezeichnung'}" aria-label="${t.label}"><div class="small muted">${t.label}${t.k === 'reifensatz' ? ' · Preis pro Stück' : ''} · <a href="${autodoc(v, t.label)}" target="_blank" rel="noopener">Autodoc ↗</a>${t.k === 'oel' ? ` · <a href="https://www.google.com/search?q=${encodeURIComponent('castrol ölfinder ' + vehName(v))}" target="_blank" rel="noopener">Ölfinder ↗</a>` : ''}</div></div>
@@ -356,9 +358,10 @@ function offerFormPage(v, von, edit) {
   const head = '<div class="pos head"><span></span><span>Bezeichnung</span><span>Art.-Nr.</span><span>Menge</span><span>Preis CHF</span><span class="tot">Total</span></div>';
   const group = (g) => `<h3>${g}</h3>${head}${TEILE.filter((t) => t.grp === g).map(rowFor).join('')}`;
   const bp = (k) => base?.positionen.find((p) => p.key === k);
+  const grpOpen = (g) => !!base?.positionen.some((p) => TEILE.find((t) => t.k === p.key)?.grp === g);
   const extra = (key, label, def, name) => `<div class="pos"><input type="checkbox" name="on_${name}" value="1" class="calc" ${base ? (bp(key) ? 'checked' : '') : ''}><div>${label}${key === 'reifen' ? `<input name="reifen_text" value="${e(bp('reifen')?.bez || '')}" placeholder="z.B. 4 Räder 17&quot;, ohne Entsorgung Altreifen" style="margin-top:.3rem">` : ''}</div><span></span><span></span><input name="preis_${name}" value="${bp(key)?.preis ?? def}" inputmode="decimal" class="calc"><div class="tot"></div></div>`;
   const freie = (base?.positionen || []).filter((p) => p.key === 'frei');
-  const freiRow = (i, f) => `<div class="pos frei"><span></span><div><input name="frei_bez_${i}" value="${e(f?.label || '')}" placeholder="Eigene Position, z.B. Batterie ersetzen"><input name="frei_info_${i}" value="${e(f?.bez || '')}" placeholder="Zusatz (optional)" style="margin-top:.3rem"></div><input name="frei_nr_${i}" value="${e(f?.nr || '')}" placeholder="Art.-Nr."><input name="frei_menge_${i}" value="${f?.menge ?? 1}" class="calc" inputmode="decimal"><input name="frei_preis_${i}" value="${f?.preis ?? ''}" class="calc" inputmode="decimal" placeholder="CHF"><div class="tot"></div></div>`;
+  const freiRow = (i, f) => `<div class="pos frei"><span></span><input name="frei_bez_${i}" value="${e(f?.label || '')}" placeholder="Hersteller / Bezeichnung"><input name="frei_nr_${i}" value="${e(f?.nr || '')}" placeholder="Art.-Nr."><input name="frei_menge_${i}" value="${f?.menge ?? 1}" class="calc" inputmode="decimal"><input name="frei_preis_${i}" value="${f?.preis ?? ''}" class="calc" inputmode="decimal" placeholder="CHF"><div class="tot"></div></div>`;
   const nFrei = Math.max(freie.length, 2);
   const titel = edit ? `${e(s.titel)} ${e(edit.nr)} bearbeiten` : `Neue ${e(s.titel)}`;
   return page(
@@ -367,17 +370,16 @@ function offerFormPage(v, von, edit) {
 ${last && !edit ? `<div class="card small"><b>Letzte ${e(s.titel)} ${e(last.nr)} (${datum(last.datum)}, ${e(last.status)}):</b> ${last.positionen.map((p) => e(p.label + (p.bez ? ' ' + p.bez : ''))).join(' · ')}
 <br><a href="/fahrzeug/${v.id}/offerte?von=${last.id}">→ Genau diese Positionen übernehmen</a></div>` : ''}
 <form method="post" action="${edit ? `/offerte/${edit.id}/bearbeiten` : `/fahrzeug/${v.id}/offerte`}" id="of">
-<div class="card"><h3>Eigene Positionen</h3>${head}<div id="frei">${Array.from({ length: nFrei }, (_, i) => freiRow(i + 1, freie[i])).join('')}</div>
-<p><button type="button" class="sec" id="addfrei">+ Position hinzufügen</button></p></div>
 <div class="card">${group('Service')}</div>
-<div class="card">${group('Bremsen')}</div>
-<div class="card">${group('Reifen')}
-${extra('reifen', 'Reifenmontage (ohne Entsorgung Altreifen)', s.reifenmontage, 'reifen')}</div>
-<div class="card"><h3>Aufwand &amp; Extras</h3>
+<details class="card" ${freie.length ? 'open' : ''}><summary>Eigene Positionen</summary>${head}<div id="frei">${Array.from({ length: nFrei }, (_, i) => freiRow(i + 1, freie[i])).join('')}</div>
+<p><button type="button" class="sec" id="addfrei">+ Position hinzufügen</button></p></details>
+<details class="card" ${grpOpen('Bremsen') ? 'open' : ''}><summary>Bremsen</summary>${head}${TEILE.filter((t) => t.grp === 'Bremsen').map(rowFor).join('')}</details>
+<details class="card" ${grpOpen('Reifen') || bp('reifen') ? 'open' : ''}><summary>Reifen</summary>${head}${TEILE.filter((t) => t.grp === 'Reifen').map(rowFor).join('')}
+${extra('reifen', 'Reifenmontage (ohne Entsorgung Altreifen)', s.reifenmontage, 'reifen')}</details>
+<details class="card" open><summary>Aufwand &amp; Entsorgung</summary>
 <div class="pos"><span></span><div>Arbeitsaufwand pauschal<input name="arbeit_text" value="${e(bp('arbeit')?.bez || '')}" placeholder="Beschreibung (optional)" style="margin-top:.3rem"></div><span></span><span></span><input name="arbeit" value="${bp('arbeit')?.preis ?? (base ? '' : s.arbeit || '')}" inputmode="decimal" class="calc" placeholder="CHF"><div class="tot"></div></div>
 <div class="pos"><span></span><div>Entsorgung pauschal (Altöl, Filter, Bremsteile)</div><span></span><span></span><input name="entsorgung" value="${bp('entsorgung')?.preis ?? (base ? '' : s.entsorgung || '')}" inputmode="decimal" class="calc" placeholder="CHF"><div class="tot"></div></div>
-${extra('bremsfl', 'Bremsflüssigkeit wechseln', s.bremsfluessigkeit, 'bremsfl')}
-</div>
+</details>
 <div class="card"><div class="grid">${field('datum', 'Datum', todayZh(edit?.datum), 'type="date" required')}${field('km', 'Km-Stand', base?.km || v.km || '', 'inputmode="numeric"')}</div>
 <div style="margin-top:.8rem"><label for="notiz">Bemerkung auf dem Beleg</label><textarea id="notiz" name="notiz" rows="2">${e(base?.notiz || '')}</textarea></div>
 <p><label style="display:inline"><input type="checkbox" name="merken" value="1" checked> Teile (Bezeichnung, Art.-Nr., Menge, Preis) am Fahrzeug merken</label></p>
@@ -391,7 +393,7 @@ const on=cb?cb.checked:true;const v=on?Math.round((m?n(m.value):1)*n(p.value)*10
 document.getElementById('sum').innerHTML='<b>'+(Math.round(s*20)/20).toFixed(2)+'</b>'}
 let nf=${nFrei};
 document.getElementById('addfrei').onclick=()=>{nf++;const d=document.createElement('div');d.className='pos frei';
-d.innerHTML='<span></span><div><input name="frei_bez_'+nf+'" placeholder="Eigene Position"><input name="frei_info_'+nf+'" placeholder="Zusatz (optional)" style="margin-top:.3rem"></div><input name="frei_nr_'+nf+'" placeholder="Art.-Nr."><input name="frei_menge_'+nf+'" value="1" class="calc" inputmode="decimal"><input name="frei_preis_'+nf+'" class="calc" inputmode="decimal" placeholder="CHF"><div class="tot"></div>';
+d.innerHTML='<span></span><input name="frei_bez_'+nf+'" placeholder="Hersteller / Bezeichnung"><input name="frei_nr_'+nf+'" placeholder="Art.-Nr."><input name="frei_menge_'+nf+'" value="1" class="calc" inputmode="decimal"><input name="frei_preis_'+nf+'" class="calc" inputmode="decimal" placeholder="CHF"><div class="tot"></div>';
 document.getElementById('frei').appendChild(d);d.querySelector('input').focus()};
 f.addEventListener('input',calc);f.addEventListener('change',calc);calc();
 </script>`,
