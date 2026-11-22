@@ -68,6 +68,7 @@ const chf = (x) =>
 const datum = (iso) => new Date(iso).toLocaleDateString('de-CH', { timeZone: 'Europe/Zurich' });
 const custName = (c) => (c ? `${c.vorname} ${c.name}`.trim() : '—');
 const vehName = (v) => (v ? `${v.marke} ${v.typ}`.trim() : '—');
+const ausweisListe = (v) => v.ausweise || (v.ausweis ? [v.ausweis] : []);
 const autodoc = (v, label) =>
   `https://www.autodoc.ch/search?keyword=${encodeURIComponent(`${v.marke} ${v.typ} ${label}`)}`;
 
@@ -286,16 +287,23 @@ ${field('kennzeichen', 'Kontrollschild', v.kennzeichen)}${field('stammnr', 'Stam
 ${field('typenschein', 'Typenschein-Nr. / TG-Code', v.typenschein)}${field('fgnr', 'Fahrgestellnummer (VIN)', v.fgnr)}
 ${field('km', 'Km-Stand (letzter)', v.km, 'inputmode="numeric"')}</div>
 <div style="margin-top:.8rem"><label for="notiz">Notizen</label><textarea id="notiz" name="notiz" rows="2">${e(v.notiz)}</textarea></div>
-<div class="row" style="margin-top:1rem"><button>Speichern</button><a class="btn sec" href="${v.id ? '/fahrzeug/' + v.id : '/kunde/' + c.id}">Abbrechen</a></div></form>`;
+${v.id ? '' : `<div style="margin-top:.8rem"><label for="neufile">Fahrzeugausweis (Foto oder PDF, mehrere möglich)</label><input type="file" id="neufile" accept="image/*,application/pdf" multiple></div>`}
+<div class="row" style="margin-top:1rem"><button>Speichern</button><a class="btn sec" href="${v.id ? '/fahrzeug/' + v.id : '/kunde/' + c.id}">Abbrechen</a><span id="neust" class="muted small"></span></div></form>
+${v.id ? '' : `<script>const nf=document.getElementById('neufile');nf.form.addEventListener('submit',async(ev)=>{const fs=[...nf.files];if(!fs.length)return;ev.preventDefault();
+const st=document.getElementById('neust');st.textContent='speichert…';const fd=new FormData(nf.form);fd.delete('neufile');const r=await fetch(nf.form.action,{method:'POST',body:new URLSearchParams(fd)});
+const base=r.url.replace(/\\/$/,'');if(!r.ok||!/\\/fahrzeug\\/\\w+$/.test(base)){st.textContent='Fehler beim Speichern';return}
+for(const f of fs){st.textContent='lädt '+f.name+'…';const u=await fetch(base+'/ausweis',{method:'POST',headers:{'content-type':f.type||'application/octet-stream'},body:f});
+if(!u.ok){st.textContent='Fahrzeug gespeichert, Upload fehlgeschlagen: '+await u.text();setTimeout(()=>location.href=base,2500);return}}location.href=base})</script>`}`;
 }
 
 function vehiclePage(v) {
   const c = db.customers.find((x) => x.id === v.customerId);
   const offers = db.offers.filter((o) => o.vehicleId === v.id).sort((a, b) => b.datum.localeCompare(a.datum));
   const teile = TEILE.filter((t) => v.teile?.[t.k]);
-  const ausweis = v.ausweis
-    ? `<p><a href="/datei/${e(v.ausweis)}" target="_blank">Fahrzeugausweis ansehen</a>
-<form method="post" action="/fahrzeug/${v.id}/ausweis-loeschen" style="display:inline"><button class="del" style="padding:.2rem .6rem">entfernen</button></form></p>`
+  const ausweis = ausweisListe(v).length
+    ? `<div class="grid" style="margin-bottom:.8rem">${ausweisListe(v).map((f) => `<div>
+${f.endsWith('.pdf') ? `<a href="/datei/${e(f)}" target="_blank">PDF öffnen</a>` : `<a href="/datei/${e(f)}" target="_blank"><img src="/datei/${e(f)}" alt="Fahrzeugausweis" style="width:100%;border-radius:6px;border:1px solid var(--border)"></a>`}
+<form method="post" action="/fahrzeug/${v.id}/ausweis-loeschen"><input type="hidden" name="datei" value="${e(f)}"><button class="del" style="padding:.2rem .6rem;margin-top:.3rem">entfernen</button></form></div>`).join('')}</div>`
     : '<p class="muted">Noch kein Ausweis hochgeladen.</p>';
   return page(
     vehName(v),
@@ -304,11 +312,11 @@ function vehiclePage(v) {
 <p>Kunde: <a href="/kunde/${c.id}">${e(custName(c))}</a>${c.tel ? ` · ${e(c.tel)}` : ''}</p>
 ${vehicleForm(v, c, `/fahrzeug/${v.id}`)}
 <h2>Fahrzeugausweis</h2><div class="card">${ausweis}
-<input type="file" id="f" accept="image/*,application/pdf" style="max-width:360px"> <button class="sec" type="button" onclick="up()">Hochladen</button>
-<span id="st" class="muted small"></span></div>
-<script>async function up(){const f=document.getElementById('f').files[0];if(!f)return;const st=document.getElementById('st');st.textContent='lädt…';
-const r=await fetch('/fahrzeug/${v.id}/ausweis',{method:'POST',headers:{'content-type':f.type||'application/octet-stream'},body:f});
-if(r.ok)location.reload();else st.textContent='Fehler: '+await r.text()}</script>
+<div class="row"><input type="file" id="f" accept="image/*,application/pdf" multiple style="max-width:360px"> <button class="sec" type="button" onclick="up()">Hochladen</button>
+<span id="st" class="muted small">Foto oder PDF, mehrere Dateien möglich (Vorder- und Rückseite)</span></div></div>
+<script>async function up(){const fs=[...document.getElementById('f').files];if(!fs.length)return;const st=document.getElementById('st');
+for(const f of fs){st.textContent='lädt '+f.name+'…';const r=await fetch('/fahrzeug/${v.id}/ausweis',{method:'POST',headers:{'content-type':f.type||'application/octet-stream'},body:f});
+if(!r.ok){st.textContent='Fehler: '+await r.text();return}}location.reload()}</script>
 <h2>Gemerkte Teile</h2><div class="card">${teile.length ? `<table><tr><th>Teil</th><th>Bezeichnung</th><th>Art.-Nr.</th><th class="r">Menge</th><th class="r">Preis</th></tr>${teile
       .map((t) => { const p = v.teile[t.k]; return `<tr><td>${t.label}</td><td>${e(p.bez)}</td><td>${e(p.nr)}</td><td class="r">${p.menge} ${t.unit || ''}</td><td class="r">${chf(p.preis)}</td></tr>`; })
       .join('')}</table>` : '<p class="muted">Noch nichts gespeichert. Die Teile werden beim Erstellen der ersten Offerte erfasst und beim nächsten Mal automatisch vorgeschlagen.</p>'}</div>
@@ -435,11 +443,11 @@ ${field('gueltigTage', 'Offerte gültig (Tage)', s.gueltigTage, 'inputmode="nume
 
 // ---------- Server ----------
 const send = (res, code, body, type = 'text/html; charset=utf-8', extra = {}) => {
-  res.writeHead(code, { 'content-type': type, 'cache-control': 'no-store', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer', ...extra });
+  res.writeHead(code, { 'content-type': type, 'cache-control': 'no-store', 'x-frame-options': 'DENY', 'referrer-policy': 'same-origin', ...extra });
   res.end(body);
 };
 const redirect = (res, to, extra = {}) => { res.writeHead(303, { location: to, ...extra }); res.end(); };
-function readBody(req, limit = 12 * 1024 * 1024) {
+function readBody(req, limit = 25 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     const chunks = []; let size = 0;
     req.on('data', (c) => { size += c.length; if (size > limit) { reject(new Error('zu gross')); req.destroy(); } else chunks.push(c); });
@@ -481,8 +489,13 @@ const server = http.createServer(async (req, res) => {
 
     // CSRF: schreibende Anfragen nur von der eigenen Seite
     if (req.method === 'POST') {
-      const o = req.headers.origin || req.headers.referer;
-      if (o && new URL(o).host !== req.headers.host) return send(res, 403, 'verboten', 'text/plain');
+      // Cookie ist SameSite=Strict; zusätzlich fremde Herkunft ablehnen ("null" = Browser ohne Referrer, erlaubt)
+      const site = req.headers['sec-fetch-site'];
+      const o = req.headers.origin;
+      let host = null;
+      try { if (o && o !== 'null') host = new URL(o).host; } catch { host = '?'; }
+      if ((site && !['same-origin', 'none'].includes(site)) || (host && host !== req.headers.host))
+        return send(res, 403, 'verboten', 'text/plain');
     }
 
     const m = (re) => p.match(re);
@@ -551,13 +564,19 @@ const server = http.createServer(async (req, res) => {
         const ext = EXT_BY_TYPE[(req.headers['content-type'] || '').split(';')[0]];
         if (!ext) return send(res, 400, 'Nur Bild oder PDF', 'text/plain');
         const buf = await readBody(req);
-        if (v.ausweis) fs.rmSync(path.join(UPLOAD_DIR, v.ausweis), { force: true });
-        v.ausweis = `${v.id}-${uid()}.${ext}`;
-        fs.writeFileSync(path.join(UPLOAD_DIR, v.ausweis), buf); save();
+        if (!buf.length) return send(res, 400, 'Datei leer', 'text/plain');
+        const name = `${v.id}-${uid()}.${ext}`;
+        fs.writeFileSync(path.join(UPLOAD_DIR, name), buf);
+        v.ausweise = [...ausweisListe(v), name]; delete v.ausweis; save();
         return send(res, 200, 'ok', 'text/plain');
       }
       if (sub === 'ausweis-loeschen' && req.method === 'POST') {
-        if (v.ausweis) { fs.rmSync(path.join(UPLOAD_DIR, v.ausweis), { force: true }); delete v.ausweis; save(); }
+        const name = (await getForm()).get('datei');
+        const liste = ausweisListe(v);
+        if (liste.includes(name)) {
+          fs.rmSync(path.join(UPLOAD_DIR, name), { force: true });
+          v.ausweise = liste.filter((x) => x !== name); delete v.ausweis; save();
+        }
         return redirect(res, `/fahrzeug/${v.id}`);
       }
       if (sub === 'offerte') {
