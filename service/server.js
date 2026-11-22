@@ -25,8 +25,7 @@ const DEFAULT_SETTINGS = {
   arbeit: 0,
   entsorgung: 0,
   reifenmontage: 100,
-  bremsfluessigkeit: 50,
-  gueltigTage: 30
+  bremsfluessigkeit: 50
 };
 let db = { customers: [], vehicles: [], offers: [], settings: { ...DEFAULT_SETTINGS }, counters: {} };
 try {
@@ -384,7 +383,6 @@ function offerPage(o) {
   const c = db.customers.find((x) => x.id === o.customerId);
   const t = totals(o.positionen);
   const s = db.settings;
-  const gueltig = new Date(new Date(o.datum).getTime() + s.gueltigTage * 86400000).toISOString();
   return page(
     o.nr,
     `<style>
@@ -397,7 +395,7 @@ ${['Offerte', 'Bestellt', 'Erledigt', 'Abgelehnt'].filter((st) => st !== o.statu
 <form method="post" action="/offerte/${o.id}/loeschen" style="margin:0" onsubmit="return confirm('Offerte löschen?')"><button class="del">Löschen</button></form></div>
 <div class="card sheet">
 <div class="row" style="align-items:flex-start"><div style="margin-right:auto"><h1 style="margin:0">${e(s.firma)}</h1><div class="muted small" style="white-space:pre-line">${e(s.adresse)}${s.kontakt ? '\n' + e(s.kontakt) : ''}</div></div>
-<div style="text-align:right"><h2 style="margin:0">Offerte ${e(o.nr)}</h2><div class="muted small">Datum ${datum(o.datum)}<br>gültig bis ${datum(gueltig)}<br>Status: <span class="tag ${e(o.status)}">${e(o.status)}</span></div></div></div>
+<div style="text-align:right"><h2 style="margin:0">Offerte ${e(o.nr)}</h2><div class="muted small">Datum ${datum(o.datum)}<br>Status: <span class="tag ${e(o.status)}">${e(o.status)}</span></div></div></div>
 <div class="grid" style="margin:1.2rem 0"><div><div class="muted small">Kunde</div><b>${e(custName(c))}</b><br>${e(c.strasse || '')}<br>${e([c.plz, c.ort].filter(Boolean).join(' '))}</div>
 <div><div class="muted small">Fahrzeug</div><b>${e(vehName(v))}</b>${v.motor ? '<br>' + e(v.motor) : ''}<br>${v.kennzeichen ? 'Schild ' + e(v.kennzeichen) : ''}${v.fgnr ? '<br>VIN ' + e(v.fgnr) : ''}${o.km ? '<br>' + e(o.km) + ' km' : ''}</div></div>
 <table><tr><th>Position</th><th class="r">Menge</th><th class="r">Preis</th><th class="r">Total CHF</th></tr>${o.positionen
@@ -434,7 +432,7 @@ function settingsPage(msg) {
 ${field('firma', 'Firma', s.firma)}${field('mwst', 'MWST % (in Preisen enthalten)', s.mwst, 'inputmode="decimal"')}
 ${field('arbeit', 'Standard Arbeitsaufwand CHF', s.arbeit, 'inputmode="decimal"')}${field('entsorgung', 'Standard Entsorgung CHF', s.entsorgung, 'inputmode="decimal"')}
 ${field('reifenmontage', 'Reifenmontage CHF', s.reifenmontage, 'inputmode="decimal"')}${field('bremsfluessigkeit', 'Bremsflüssigkeit CHF', s.bremsfluessigkeit, 'inputmode="decimal"')}
-${field('gueltigTage', 'Offerte gültig (Tage)', s.gueltigTage, 'inputmode="numeric"')}</div>
+</div>
 <div style="margin-top:.8rem"><label for="adresse">Adresse (Briefkopf)</label><textarea id="adresse" name="adresse" rows="3">${e(s.adresse)}</textarea></div>
 <div style="margin-top:.8rem"><label for="kontakt">Kontakt (Telefon, E-Mail, MWST-Nr.)</label><input id="kontakt" name="kontakt" value="${e(s.kontakt)}"></div>
 <p><button>Speichern</button></p></form>`
@@ -511,8 +509,7 @@ const server = http.createServer(async (req, res) => {
       const s = db.settings;
       for (const k of ['firma', 'adresse', 'kontakt']) s[k] = (form.get(k) || '').trim();
       for (const k of ['mwst', 'arbeit', 'entsorgung', 'reifenmontage', 'bremsfluessigkeit']) s[k] = num(form.get(k));
-      s.gueltigTage = Math.max(1, Math.round(num(form.get('gueltigTage'), 30)));
-      save();
+          save();
       return send(res, 200, settingsPage('Gespeichert.'));
     }
 
