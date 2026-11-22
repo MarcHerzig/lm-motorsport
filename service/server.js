@@ -9,6 +9,7 @@ const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
 const UPLOAD_DIR = path.join(DATA_DIR, 'ausweise');
 const DATA_FILE = path.join(DATA_DIR, 'service.json');
 const PORT = Number(process.env.PORT || 3000);
+const ASSET_DIR = new URL('./assets/', import.meta.url).pathname;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_HASH = process.env.ADMIN_PASSWORD_HASH || '';
 const SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
@@ -19,6 +20,7 @@ fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 // ---------- Daten ----------
 const DEFAULT_SETTINGS = {
   firma: 'LM Motorsport GmbH',
+  titel: 'Offerte',
   adresse: '',
   kontakt: '',
   mwst: 8.1,
@@ -50,7 +52,8 @@ const TEILE = [
   { k: 'scheiben_v', label: 'Bremsscheiben vorne', grp: 'Bremsen', menge: 2, unit: 'Stk' },
   { k: 'belaege_v', label: 'Bremsbeläge vorne', grp: 'Bremsen', menge: 1, unit: 'Satz' },
   { k: 'scheiben_h', label: 'Bremsscheiben hinten', grp: 'Bremsen', menge: 2, unit: 'Stk' },
-  { k: 'belaege_h', label: 'Bremsbeläge hinten', grp: 'Bremsen', menge: 1, unit: 'Satz' }
+  { k: 'belaege_h', label: 'Bremsbeläge hinten', grp: 'Bremsen', menge: 1, unit: 'Satz' },
+  { k: 'reifensatz', label: 'Reifen', grp: 'Reifen', menge: 4, unit: 'Stk' }
 ];
 const SERVICE_DEFAULT_ON = ['oel', 'oelfilter', 'luftfilter', 'innenraumfilter'];
 
@@ -104,6 +107,10 @@ const clientIp = (req) => (req.headers['cf-connecting-ip'] || req.headers['x-for
 
 // ---------- HTML ----------
 const CSS = `
+@font-face{font-family:Oswald;font-weight:500;font-display:swap;src:url(/assets/oswald-500.woff2) format('woff2')}
+@font-face{font-family:Oswald;font-weight:600;font-display:swap;src:url(/assets/oswald-600.woff2) format('woff2')}
+@font-face{font-family:Inter;font-weight:400;font-display:swap;src:url(/assets/inter-400.woff2) format('woff2')}
+@font-face{font-family:Inter;font-weight:600;font-display:swap;src:url(/assets/inter-600.woff2) format('woff2')}
 :root{--bg:#0b0c0e;--surface:#16181c;--border:#2a2d33;--ink:#f5f5f3;--muted:#9ca0a8;--accent:#c8cdd4;--ok:#6fbf8b;--warn:#e0b060;--bad:#e07070}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
@@ -176,12 +183,13 @@ function buildOffer(form, vehicle) {
     positionen.push({ key: 'reifen', label: 'Reifenmontage', bez: get('reifen_text').trim(), nr: '', menge: 1, unit: '', preis: num(get('preis_reifen'), s.reifenmontage) });
   if (get('on_bremsfl') === '1')
     positionen.push({ key: 'bremsfl', label: 'Bremsflüssigkeit wechseln', bez: '', nr: '', menge: 1, unit: '', preis: num(get('preis_bremsfl'), s.bremsfluessigkeit) });
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 80; i++) {
     const b = get(`frei_bez_${i}`).trim();
-    if (b) positionen.push({ key: 'frei', label: b, bez: '', nr: '', menge: num(get(`frei_menge_${i}`), 1), unit: '', preis: num(get(`frei_preis_${i}`)) });
+    if (b) positionen.push({ key: 'frei', label: b, bez: get(`frei_info_${i}`).trim(), nr: get(`frei_nr_${i}`).trim(), menge: num(get(`frei_menge_${i}`), 1), unit: '', preis: num(get(`frei_preis_${i}`)) });
   }
   return positionen;
 }
+const parseDatum = (d) => (/^\d{4}-\d{2}-\d{2}$/.test(d || '') ? new Date(`${d}T12:00:00`).toISOString() : new Date().toISOString());
 const lineTotal = (p) => Math.round(p.menge * p.preis * 100) / 100;
 function totals(positionen) {
   const sum = positionen.reduce((a, p) => a + lineTotal(p), 0);
@@ -326,88 +334,151 @@ if(!r.ok){st.textContent='Fehler: '+await r.text();return}}location.reload()}</s
   );
 }
 
-function offerFormPage(v, von) {
+const todayZh = (iso) => new Date(iso || Date.now()).toLocaleDateString('sv-SE', { timeZone: 'Europe/Zurich' });
+
+function offerFormPage(v, von, edit) {
   const c = db.customers.find((x) => x.id === v.customerId);
   const s = db.settings;
-  const last = db.offers.filter((o) => o.vehicleId === v.id).sort((a, b) => b.datum.localeCompare(a.datum))[0];
-  const base = von || null;
+  const last = db.offers.filter((o) => o.vehicleId === v.id && o.id !== edit?.id).sort((a, b) => b.datum.localeCompare(a.datum))[0];
+  const base = edit || von || null;
   const rowFor = (t) => {
     const saved = v.teile?.[t.k] || {};
     const pos = base?.positionen.find((p) => p.key === t.k);
     const p = pos || saved;
     const on = base ? !!pos : t.grp === 'Service' && SERVICE_DEFAULT_ON.includes(t.k);
     return `<div class="pos"><input type="checkbox" name="on_${t.k}" value="1" ${on ? 'checked' : ''} class="calc">
-<div><input name="bez_${t.k}" value="${e(p.bez)}" placeholder="${t.k === 'oel' ? 'z.B. Castrol Edge 5W-30 LL' : 'Hersteller / Bezeichnung'}" aria-label="${t.label}"><div class="small muted">${t.label} · <a href="${autodoc(v, t.label)}" target="_blank" rel="noopener">Autodoc ↗</a>${t.k === 'oel' ? ` · <a href="https://www.google.com/search?q=${encodeURIComponent('castrol ölfinder ' + vehName(v))}" target="_blank" rel="noopener">Ölfinder ↗</a>` : ''}</div></div>
+<div><input name="bez_${t.k}" value="${e(p.bez)}" placeholder="${t.k === 'oel' ? 'z.B. Castrol Edge 5W-30 LL' : t.k === 'reifensatz' ? 'z.B. Michelin Pilot Sport 4 225/45 R17' : 'Hersteller / Bezeichnung'}" aria-label="${t.label}"><div class="small muted">${t.label}${t.k === 'reifensatz' ? ' · Preis pro Stück' : ''} · <a href="${autodoc(v, t.label)}" target="_blank" rel="noopener">Autodoc ↗</a>${t.k === 'oel' ? ` · <a href="https://www.google.com/search?q=${encodeURIComponent('castrol ölfinder ' + vehName(v))}" target="_blank" rel="noopener">Ölfinder ↗</a>` : ''}</div></div>
 <input name="nr_${t.k}" value="${e(p.nr)}" placeholder="Art.-Nr." aria-label="Artikelnummer">
 <input name="menge_${t.k}" value="${p.menge ?? t.menge}" inputmode="decimal" class="calc" aria-label="Menge ${t.unit || ''}" title="${t.unit || 'Menge'}">
 <input name="preis_${t.k}" value="${p.preis ?? ''}" inputmode="decimal" class="calc" placeholder="Preis" aria-label="Preis">
 <div class="tot" data-tot="${t.k}"></div></div>`;
   };
-  const group = (g) => `<h3>${g}</h3><div class="pos head"><span></span><span>Bezeichnung</span><span>Art.-Nr.</span><span>Menge</span><span>Preis CHF</span><span class="tot">Total</span></div>${TEILE.filter((t) => t.grp === g).map(rowFor).join('')}`;
+  const head = '<div class="pos head"><span></span><span>Bezeichnung</span><span>Art.-Nr.</span><span>Menge</span><span>Preis CHF</span><span class="tot">Total</span></div>';
+  const group = (g) => `<h3>${g}</h3>${head}${TEILE.filter((t) => t.grp === g).map(rowFor).join('')}`;
   const bp = (k) => base?.positionen.find((p) => p.key === k);
   const extra = (key, label, def, name) => `<div class="pos"><input type="checkbox" name="on_${name}" value="1" class="calc" ${base ? (bp(key) ? 'checked' : '') : ''}><div>${label}${key === 'reifen' ? `<input name="reifen_text" value="${e(bp('reifen')?.bez || '')}" placeholder="z.B. 4 Räder 17&quot;, ohne Entsorgung Altreifen" style="margin-top:.3rem">` : ''}</div><span></span><span></span><input name="preis_${name}" value="${bp(key)?.preis ?? def}" inputmode="decimal" class="calc"><div class="tot"></div></div>`;
+  const freie = (base?.positionen || []).filter((p) => p.key === 'frei');
+  const freiRow = (i, f) => `<div class="pos frei"><span></span><div><input name="frei_bez_${i}" value="${e(f?.label || '')}" placeholder="Eigene Position, z.B. Batterie ersetzen"><input name="frei_info_${i}" value="${e(f?.bez || '')}" placeholder="Zusatz (optional)" style="margin-top:.3rem"></div><input name="frei_nr_${i}" value="${e(f?.nr || '')}" placeholder="Art.-Nr."><input name="frei_menge_${i}" value="${f?.menge ?? 1}" class="calc" inputmode="decimal"><input name="frei_preis_${i}" value="${f?.preis ?? ''}" class="calc" inputmode="decimal" placeholder="CHF"><div class="tot"></div></div>`;
+  const nFrei = Math.max(freie.length, 2);
+  const titel = edit ? `${e(s.titel)} ${e(edit.nr)} bearbeiten` : `Neue ${e(s.titel)}`;
   return page(
-    'Neue Offerte',
-    `<h1>Neue Offerte</h1><p><a href="/kunde/${c.id}">${e(custName(c))}</a> · <a href="/fahrzeug/${v.id}"><b>${e(vehName(v))}</b></a> ${e(v.kennzeichen)} ${v.motor ? `<span class="muted">· ${e(v.motor)}</span>` : ''}</p>
-${last ? `<div class="card small"><b>Letzte Offerte ${e(last.nr)} (${datum(last.datum)}, ${e(last.status)}):</b> ${last.positionen.map((p) => e(p.label + (p.bez ? ' ' + p.bez : ''))).join(' · ')}
+    titel,
+    `<h1>${titel}</h1><p><a href="/kunde/${c.id}">${e(custName(c))}</a> · <a href="/fahrzeug/${v.id}"><b>${e(vehName(v))}</b></a> ${e(v.kennzeichen)} ${v.motor ? `<span class="muted">· ${e(v.motor)}</span>` : ''}</p>
+${last && !edit ? `<div class="card small"><b>Letzte ${e(s.titel)} ${e(last.nr)} (${datum(last.datum)}, ${e(last.status)}):</b> ${last.positionen.map((p) => e(p.label + (p.bez ? ' ' + p.bez : ''))).join(' · ')}
 <br><a href="/fahrzeug/${v.id}/offerte?von=${last.id}">→ Genau diese Positionen übernehmen</a></div>` : ''}
-<form method="post" action="/fahrzeug/${v.id}/offerte" id="of">
+<form method="post" action="${edit ? `/offerte/${edit.id}/bearbeiten` : `/fahrzeug/${v.id}/offerte`}" id="of">
+<div class="card"><h3>Eigene Positionen</h3>${head}<div id="frei">${Array.from({ length: nFrei }, (_, i) => freiRow(i + 1, freie[i])).join('')}</div>
+<p><button type="button" class="sec" id="addfrei">+ Position hinzufügen</button></p></div>
 <div class="card">${group('Service')}</div>
 <div class="card">${group('Bremsen')}</div>
+<div class="card">${group('Reifen')}
+${extra('reifen', 'Reifenmontage (ohne Entsorgung Altreifen)', s.reifenmontage, 'reifen')}</div>
 <div class="card"><h3>Aufwand &amp; Extras</h3>
-<div class="pos"><span></span><div>Arbeitsaufwand pauschal<input name="arbeit_text" value="${e(bp('arbeit')?.bez || '')}" placeholder="Beschreibung (optional)" style="margin-top:.3rem"></div><span></span><span></span><input name="arbeit" value="${bp('arbeit')?.preis ?? (s.arbeit || '')}" inputmode="decimal" class="calc" placeholder="CHF"><div class="tot"></div></div>
-<div class="pos"><span></span><div>Entsorgung pauschal (Altöl, Filter, Bremsteile)</div><span></span><span></span><input name="entsorgung" value="${bp('entsorgung')?.preis ?? (s.entsorgung || '')}" inputmode="decimal" class="calc" placeholder="CHF"><div class="tot"></div></div>
-${extra('reifen', 'Reifenmontage (ohne Entsorgung Altreifen)', s.reifenmontage, 'reifen')}
+<div class="pos"><span></span><div>Arbeitsaufwand pauschal<input name="arbeit_text" value="${e(bp('arbeit')?.bez || '')}" placeholder="Beschreibung (optional)" style="margin-top:.3rem"></div><span></span><span></span><input name="arbeit" value="${bp('arbeit')?.preis ?? (base ? '' : s.arbeit || '')}" inputmode="decimal" class="calc" placeholder="CHF"><div class="tot"></div></div>
+<div class="pos"><span></span><div>Entsorgung pauschal (Altöl, Filter, Bremsteile)</div><span></span><span></span><input name="entsorgung" value="${bp('entsorgung')?.preis ?? (base ? '' : s.entsorgung || '')}" inputmode="decimal" class="calc" placeholder="CHF"><div class="tot"></div></div>
 ${extra('bremsfl', 'Bremsflüssigkeit wechseln', s.bremsfluessigkeit, 'bremsfl')}
-${[1, 2, 3].map((i) => { const f = base?.positionen.filter((p) => p.key === 'frei')[i - 1]; return `<div class="pos"><span></span><input name="frei_bez_${i}" value="${e(f?.label || '')}" placeholder="Freie Position"><span></span><input name="frei_menge_${i}" value="${f?.menge ?? 1}" class="calc" inputmode="decimal"><input name="frei_preis_${i}" value="${f?.preis ?? ''}" class="calc" inputmode="decimal" placeholder="CHF"><div class="tot"></div></div>`; }).join('')}
 </div>
-<div class="card"><div class="grid">${field('km', 'Km-Stand', base?.km || v.km || '', 'inputmode="numeric"')}</div>
-<div style="margin-top:.8rem"><label for="notiz">Bemerkung auf der Offerte</label><textarea id="notiz" name="notiz" rows="2">${e(base?.notiz || '')}</textarea></div>
+<div class="card"><div class="grid">${field('datum', 'Datum', todayZh(edit?.datum), 'type="date" required')}${field('km', 'Km-Stand', base?.km || v.km || '', 'inputmode="numeric"')}</div>
+<div style="margin-top:.8rem"><label for="notiz">Bemerkung auf dem Beleg</label><textarea id="notiz" name="notiz" rows="2">${e(base?.notiz || '')}</textarea></div>
 <p><label style="display:inline"><input type="checkbox" name="merken" value="1" checked> Teile (Bezeichnung, Art.-Nr., Menge, Preis) am Fahrzeug merken</label></p>
 <table class="sum"><tr><td>Total CHF (auf 5 Rappen)</td><td class="r" id="sum"><b>0.00</b></td></tr></table></div>
-<div class="row"><button>Offerte erstellen</button><a class="btn sec" href="/fahrzeug/${v.id}">Abbrechen</a></div></form>
+<div class="row"><button>${edit ? 'Änderungen speichern' : 'Erstellen'}</button><a class="btn sec" href="${edit ? '/offerte/' + edit.id : '/fahrzeug/' + v.id}">Abbrechen</a></div></form>
 <script>
 const f=document.getElementById('of'),n=x=>parseFloat(String(x||'').replace(',','.'))||0;
 function calc(){let s=0;f.querySelectorAll('.pos:not(.head)').forEach(r=>{const cb=r.querySelector('input[type=checkbox]');const m=r.querySelector('[name^=menge_],[name^=frei_menge_]');
 const p=r.querySelector('[name^=preis_],[name=arbeit],[name=entsorgung],[name^=frei_preis_]');const t=r.querySelector('.tot');if(!p||!t)return;
 const on=cb?cb.checked:true;const v=on?Math.round((m?n(m.value):1)*n(p.value)*100)/100:0;t.textContent=v?v.toFixed(2):'';s+=v});
 document.getElementById('sum').innerHTML='<b>'+(Math.round(s*20)/20).toFixed(2)+'</b>'}
+let nf=${nFrei};
+document.getElementById('addfrei').onclick=()=>{nf++;const d=document.createElement('div');d.className='pos frei';
+d.innerHTML='<span></span><div><input name="frei_bez_'+nf+'" placeholder="Eigene Position"><input name="frei_info_'+nf+'" placeholder="Zusatz (optional)" style="margin-top:.3rem"></div><input name="frei_nr_'+nf+'" placeholder="Art.-Nr."><input name="frei_menge_'+nf+'" value="1" class="calc" inputmode="decimal"><input name="frei_preis_'+nf+'" class="calc" inputmode="decimal" placeholder="CHF"><div class="tot"></div>';
+document.getElementById('frei').appendChild(d);d.querySelector('input').focus()};
 f.addEventListener('input',calc);f.addEventListener('change',calc);calc();
 </script>`,
     { wide: true }
   );
 }
 
-function offerPage(o) {
+const SHEET_CSS = `
+.paper{background:#fff;color:#16181c;max-width:210mm;margin:0 auto;font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 8px 40px #000a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .band{background:#0b0c0e;color:#f5f5f3;padding:7mm 9mm;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.paper .band img{height:13mm;width:auto;display:block}
+.paper .doc{text-align:right;font:500 6.4mm Oswald,Impact,sans-serif;letter-spacing:.14em;text-transform:uppercase;line-height:1.1}
+.paper .doc small{display:block;font:400 3.3mm Inter,sans-serif;letter-spacing:.04em;color:#a7acb4;text-transform:none;margin-top:1.4mm}
+.paper .rule{height:1.3mm;background:linear-gradient(90deg,#f5f5f3,#8b9199 55%,#3a3d44)}
+.paper .bd{padding:8mm 9mm 7mm}
+.paper .parties{display:grid;grid-template-columns:1fr 1fr;gap:6mm;margin-bottom:8mm}
+.paper .party{border-left:1mm solid #8b9199;padding-left:4mm;line-height:1.5}
+.paper .lab{font:500 3mm Oswald,Impact,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#6b7078;margin-bottom:1mm}
+.paper .party b{font-size:4.3mm;font-weight:600}
+.paper table.pt{width:100%;border-collapse:collapse}
+.paper .pt th{background:#0b0c0e;color:#f5f5f3;font:500 3.1mm Oswald,Impact,sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:2.3mm 3mm;text-align:left;border:0}
+.paper .pt td{padding:2.7mm 3mm;border:0;border-bottom:.25mm solid #dcdfe3;vertical-align:top;color:#16181c}
+.paper .pt tbody tr:nth-child(even) td{background:#f4f5f6}
+.paper .pt .r{text-align:right;white-space:nowrap}
+.paper .pt tr{break-inside:avoid}
+.paper .sub{color:#6b7078;font-size:3.3mm}
+.paper .totbox{margin:6mm 0 0 auto;width:78mm;break-inside:avoid}
+.paper .totbox .ln{display:flex;justify-content:space-between;padding:.9mm 0;color:#6b7078;font-size:3.4mm}
+.paper .totbox .t{background:#0b0c0e;color:#f5f5f3;padding:3.2mm 4mm;margin-top:2mm;font:500 5.4mm Oswald,Impact,sans-serif;letter-spacing:.05em;display:flex;justify-content:space-between}
+.paper .note{margin-top:7mm;white-space:pre-line;border-left:1mm solid #dcdfe3;padding-left:4mm;color:#3a3d44}
+.paper .foot{margin:9mm 9mm 0;padding:3mm 0 7mm;border-top:.3mm solid #c9cdd2;color:#6b7078;font-size:3.1mm;display:flex;justify-content:space-between;gap:6mm;white-space:pre-line}
+@page{size:A4;margin:10mm}
+@media print{header.top,.noprint{display:none!important}body{background:#fff}main{max-width:none;padding:0}.paper{box-shadow:none;max-width:none}}
+`;
+
+function sheetHtml(o) {
   const v = db.vehicles.find((x) => x.id === o.vehicleId);
   const c = db.customers.find((x) => x.id === o.customerId);
   const t = totals(o.positionen);
   const s = db.settings;
+  const foot = [s.firma, s.adresse.replace(/\n+/g, ', '), s.kontakt].filter(Boolean).join('  ·  ');
+  return `<style>${SHEET_CSS}</style>
+<div class="paper">
+<div class="band"><img src="/assets/logo.png" alt="${e(s.firma)}"><div class="doc">${e(s.titel)}<small>Nr. ${e(o.nr)} · ${datum(o.datum)}</small></div></div>
+<div class="rule"></div>
+<div class="bd">
+<div class="parties">
+<div class="party"><div class="lab">Kunde</div><b>${e(custName(c))}</b><br>${e(c.strasse || '')}${c.strasse ? '<br>' : ''}${e([c.plz, c.ort].filter(Boolean).join(' '))}</div>
+<div class="party"><div class="lab">Fahrzeug</div><b>${e(vehName(v))}</b>${v.motor ? '<br>' + e(v.motor) : ''}${v.kennzeichen ? '<br>Kontrollschild ' + e(v.kennzeichen) : ''}${v.fgnr ? '<br>VIN ' + e(v.fgnr) : ''}${o.km ? '<br>' + e(o.km) + ' km' : ''}</div></div>
+<table class="pt"><thead><tr><th>Position</th><th class="r">Menge</th><th class="r">Preis</th><th class="r">Total CHF</th></tr></thead><tbody>${o.positionen
+      .map((p) => `<tr><td><b>${e(p.label)}</b>${p.bez ? '<div class="sub">' + e(p.bez) + '</div>' : ''}${p.nr ? `<div class="sub">Art.-Nr. ${e(p.nr)}</div>` : ''}</td><td class="r">${p.menge}${p.unit ? ' ' + p.unit : ''}</td><td class="r">${chf(p.preis)}</td><td class="r">${chf(lineTotal(p))}</td></tr>`)
+      .join('')}</tbody></table>
+<div class="totbox"><div class="ln"><span>Zwischensumme</span><span>${chf(t.sum)}</span></div>
+${Math.abs(t.total - t.sum) > 0.001 ? `<div class="ln"><span>Rundung auf 5 Rp.</span><span>${chf(t.total - t.sum)}</span></div>` : ''}
+<div class="t"><span>Total CHF</span><span>${chf(t.total)}</span></div>
+<div class="ln" style="margin-top:1.5mm"><span>inkl. ${s.mwst}% MWST</span><span>${chf(t.mwstBetrag)}</span></div></div>
+${o.notiz ? `<div class="note">${e(o.notiz)}</div>` : ''}
+</div>
+<div class="foot">${e(foot)}</div></div>`;
+}
+
+function offerPage(o, origin) {
+  const v = db.vehicles.find((x) => x.id === o.vehicleId);
+  const link = o.share ? `${origin}/v/${o.share}` : '';
   return page(
     o.nr,
-    `<style>
-@media print{header.top,.noprint{display:none!important}body{background:#fff;color:#000}main{max-width:none;padding:0}.card{background:#fff;border:0;padding:0}
-th,td{border-color:#bbb!important;color:#000}.muted,th{color:#555!important}a{color:#000;text-decoration:none}.sheet{color:#000}}
-</style>
-<div class="row noprint" style="margin-bottom:1rem"><a class="btn" href="#" onclick="window.print();return false">Als PDF speichern / drucken</a>
-<a class="btn sec" href="/fahrzeug/${v.id}/offerte?von=${o.id}">Als Vorlage für neue Offerte</a>
+    `<div class="row noprint" style="margin-bottom:1rem"><a class="btn" href="#" onclick="window.print();return false">Als PDF speichern / drucken</a>
+<a class="btn sec" href="/offerte/${o.id}/bearbeiten">Bearbeiten</a>
+<a class="btn sec" href="/fahrzeug/${v.id}/offerte?von=${o.id}">Als Vorlage für neuen Beleg</a>
 ${['Offerte', 'Bestellt', 'Erledigt', 'Abgelehnt'].filter((st) => st !== o.status).map((st) => `<form method="post" action="/offerte/${o.id}/status" style="margin:0"><input type="hidden" name="status" value="${st}"><button class="sec">→ ${st}</button></form>`).join('')}
-<form method="post" action="/offerte/${o.id}/loeschen" style="margin:0" onsubmit="return confirm('Offerte löschen?')"><button class="del">Löschen</button></form></div>
-<div class="card sheet">
-<div class="row" style="align-items:flex-start"><div style="margin-right:auto"><h1 style="margin:0">${e(s.firma)}</h1><div class="muted small" style="white-space:pre-line">${e(s.adresse)}${s.kontakt ? '\n' + e(s.kontakt) : ''}</div></div>
-<div style="text-align:right"><h2 style="margin:0">Offerte ${e(o.nr)}</h2><div class="muted small">Datum ${datum(o.datum)}<br>Status: <span class="tag ${e(o.status)}">${e(o.status)}</span></div></div></div>
-<div class="grid" style="margin:1.2rem 0"><div><div class="muted small">Kunde</div><b>${e(custName(c))}</b><br>${e(c.strasse || '')}<br>${e([c.plz, c.ort].filter(Boolean).join(' '))}</div>
-<div><div class="muted small">Fahrzeug</div><b>${e(vehName(v))}</b>${v.motor ? '<br>' + e(v.motor) : ''}<br>${v.kennzeichen ? 'Schild ' + e(v.kennzeichen) : ''}${v.fgnr ? '<br>VIN ' + e(v.fgnr) : ''}${o.km ? '<br>' + e(o.km) + ' km' : ''}</div></div>
-<table><tr><th>Position</th><th class="r">Menge</th><th class="r">Preis</th><th class="r">Total CHF</th></tr>${o.positionen
-      .map((p) => `<tr><td><b>${e(p.label)}</b>${p.bez ? '<br>' + e(p.bez) : ''}${p.nr ? `<div class="muted small">Art.-Nr. ${e(p.nr)}</div>` : ''}</td><td class="r">${p.menge}${p.unit ? ' ' + p.unit : ''}</td><td class="r">${chf(p.preis)}</td><td class="r">${chf(lineTotal(p))}</td></tr>`)
-      .join('')}</table>
-<table class="sum" style="margin-top:1rem"><tr><td>Zwischensumme</td><td class="r">${chf(t.sum)}</td></tr>
-<tr><td class="muted">Rundung auf 5 Rp.</td><td class="r muted">${chf(t.total - t.sum)}</td></tr>
-<tr class="t"><td>Total CHF</td><td class="r">${chf(t.total)}</td></tr>
-<tr><td class="muted small">inkl. ${s.mwst}% MWST</td><td class="r muted small">${chf(t.mwstBetrag)}</td></tr></table>
-${o.notiz ? `<p style="white-space:pre-line">${e(o.notiz)}</p>` : ''}
-<p class="muted small">Teile gemäss Fahrzeugdaten ausgewählt. Preise in CHF.</p></div>`,
+<span class="tag ${e(o.status)}">Status: ${e(o.status)}</span>
+<form method="post" action="/offerte/${o.id}/loeschen" style="margin:0" onsubmit="return confirm('Löschen?')"><button class="del">Löschen</button></form></div>
+<div class="card noprint"><b>Vorschau-Link für den Kunden</b> <span class="muted small">zeigt nur diesen Beleg, ohne Login</span>
+${link ? `<div class="row" style="margin-top:.5rem"><input id="lnk" value="${e(link)}" readonly style="max-width:520px" onclick="this.select()"><button class="sec" type="button" onclick="navigator.clipboard.writeText(document.getElementById('lnk').value).then(()=>this.textContent='Kopiert ✓')">Kopieren</button>
+<form method="post" action="/offerte/${o.id}/teilen-aus" style="margin:0" onsubmit="return confirm('Link sperren? Der Kunde sieht den Beleg dann nicht mehr.')"><button class="del">Link sperren</button></form></div>`
+ : `<form method="post" action="/offerte/${o.id}/teilen" style="margin-top:.5rem"><button>Link erstellen</button></form>`}</div>
+${sheetHtml(o)}`,
     {}
+  );
+}
+
+function publicPage(o) {
+  return page(
+    `${db.settings.titel} ${o.nr}`,
+    `<div class="row noprint" style="margin-bottom:1rem;max-width:210mm;margin-left:auto;margin-right:auto"><a class="btn" href="#" onclick="window.print();return false">Als PDF speichern / drucken</a></div>
+${sheetHtml(o)}`,
+    { nav: false }
   );
 }
 
@@ -429,7 +500,7 @@ function settingsPage(msg) {
   return page(
     'Einstellungen',
     `<h1>Einstellungen</h1>${msg ? `<p class="muted">${e(msg)}</p>` : ''}<form method="post" class="card"><div class="grid">
-${field('firma', 'Firma', s.firma)}${field('mwst', 'MWST % (in Preisen enthalten)', s.mwst, 'inputmode="decimal"')}
+${field('firma', 'Firma', s.firma)}${field('titel', 'Titel des Belegs (z.B. Offerte, Leistungsnachweis)', s.titel)}${field('mwst', 'MWST % (in Preisen enthalten)', s.mwst, 'inputmode="decimal"')}
 ${field('arbeit', 'Standard Arbeitsaufwand CHF', s.arbeit, 'inputmode="decimal"')}${field('entsorgung', 'Standard Entsorgung CHF', s.entsorgung, 'inputmode="decimal"')}
 ${field('reifenmontage', 'Reifenmontage CHF', s.reifenmontage, 'inputmode="decimal"')}${field('bremsfluessigkeit', 'Bremsflüssigkeit CHF', s.bremsfluessigkeit, 'inputmode="decimal"')}
 </div>
@@ -462,8 +533,23 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://x');
     const p = url.pathname;
     const secure = req.headers['x-forwarded-proto'] === 'https';
+    const origin = `${secure ? 'https' : 'http'}://${req.headers.host}`;
 
     if (p === '/healthz') return send(res, 200, 'ok', 'text/plain');
+
+    let pr;
+    if ((pr = p.match(/^\/assets\/([\w.-]+)$/)) && req.method === 'GET') {
+      const f = path.join(ASSET_DIR, path.basename(pr[1]));
+      if (!fs.existsSync(f)) return send(res, 404, 'nicht gefunden', 'text/plain');
+      const ext = path.extname(f).slice(1);
+      return send(res, 200, fs.readFileSync(f), ext === 'woff2' ? 'font/woff2' : MIME[ext] || 'application/octet-stream', { 'cache-control': 'public, max-age=86400' });
+    }
+    // Vorschau-Link für Kunden: nur der eine Beleg, ohne Login
+    if ((pr = p.match(/^\/v\/(\w{16,64})$/)) && req.method === 'GET') {
+      const o = db.offers.find((x) => x.share && x.share === pr[1]);
+      if (!o) return send(res, 404, page('Nicht gefunden', '<h1 style="text-align:center;margin-top:20vh">Dieser Link ist nicht (mehr) gültig.</h1>', { nav: false }));
+      return send(res, 200, publicPage(o), 'text/html; charset=utf-8', { 'x-robots-tag': 'noindex' });
+    }
 
     if (p === '/login') {
       if (req.method === 'GET') return send(res, 200, loginPage());
@@ -507,7 +593,7 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'GET') return send(res, 200, settingsPage());
       const form = await getForm();
       const s = db.settings;
-      for (const k of ['firma', 'adresse', 'kontakt']) s[k] = (form.get(k) || '').trim();
+      for (const k of ['firma', 'titel', 'adresse', 'kontakt']) s[k] = (form.get(k) || '').trim() || (k === 'titel' ? 'Offerte' : '');
       for (const k of ['mwst', 'arbeit', 'entsorgung', 'reifenmontage', 'bremsfluessigkeit']) s[k] = num(form.get(k));
           save();
       return send(res, 200, settingsPage('Gespeichert.'));
@@ -590,7 +676,7 @@ const server = http.createServer(async (req, res) => {
         }
         const km = (form.get('km') || '').trim();
         if (km) v.km = km;
-        const o = { id: uid(), nr: nextNumber(), datum: new Date().toISOString(), vehicleId: v.id, customerId: v.customerId, status: 'Offerte', km, notiz: (form.get('notiz') || '').trim(), positionen };
+        const o = { id: uid(), nr: nextNumber(), datum: parseDatum(form.get('datum')), vehicleId: v.id, customerId: v.customerId, status: 'Offerte', km, notiz: (form.get('notiz') || '').trim(), positionen };
         db.offers.push(o); save();
         return redirect(res, `/offerte/${o.id}`);
       }
@@ -603,10 +689,30 @@ const server = http.createServer(async (req, res) => {
     }
 
     // Offerten
-    if ((r = m(/^\/offerte\/(\w+)(?:\/(\w+))?$/))) {
+    if ((r = m(/^\/offerte\/(\w+)(?:\/([\w-]+))?$/))) {
       const o = db.offers.find((x) => x.id === r[1]);
       if (!o) return send(res, 404, page('404', '<h1>Nicht gefunden</h1>'));
-      if (!r[2] && req.method === 'GET') return send(res, 200, offerPage(o));
+      if (!r[2] && req.method === 'GET') return send(res, 200, offerPage(o, origin));
+      if (r[2] === 'bearbeiten') {
+        const v = db.vehicles.find((x) => x.id === o.vehicleId);
+        if (req.method === 'GET') return send(res, 200, offerFormPage(v, null, o));
+        const form = await getForm();
+        const positionen = buildOffer(form, v);
+        if (!positionen.length) return send(res, 400, page('Fehler', '<h1>Keine Position gewählt</h1><p><a href="javascript:history.back()">Zurück</a></p>'));
+        if (form.get('merken') === '1') {
+          v.teile = v.teile || {};
+          for (const p of positionen) if (TEILE.some((t) => t.k === p.key)) v.teile[p.key] = { bez: p.bez, nr: p.nr, menge: p.menge, preis: p.preis };
+        }
+        o.positionen = positionen;
+        o.datum = parseDatum(form.get('datum'));
+        o.km = (form.get('km') || '').trim();
+        o.notiz = (form.get('notiz') || '').trim();
+        o.geaendert = new Date().toISOString();
+        save();
+        return redirect(res, `/offerte/${o.id}`);
+      }
+      if (r[2] === 'teilen' && req.method === 'POST') { if (!o.share) { o.share = crypto.randomBytes(12).toString('hex'); save(); } return redirect(res, `/offerte/${o.id}`); }
+      if (r[2] === 'teilen-aus' && req.method === 'POST') { delete o.share; save(); return redirect(res, `/offerte/${o.id}`); }
       if (r[2] === 'status' && req.method === 'POST') {
         const st = (await getForm()).get('status');
         if (['Offerte', 'Bestellt', 'Erledigt', 'Abgelehnt'].includes(st)) { o.status = st; o[`${st.toLowerCase()}Am`] = new Date().toISOString(); save(); }
