@@ -442,6 +442,27 @@ const SHEET_CSS = `
 .paper .foot{position:relative;margin-top:6mm;background:#0b0c0e;color:#b5bac1;padding:4.6mm 11mm;font-size:3.1mm;letter-spacing:.03em;white-space:pre-line;overflow:hidden}
 .paper .foot b{color:#fff;font-weight:600}
 .paper .foot::after{content:'';position:absolute;top:0;right:-3mm;width:34mm;height:100%;background:linear-gradient(113deg,transparent 0 28%,#9aa0a8 28% 44%,transparent 44% 52%,#555a62 52% 68%,transparent 68%);opacity:.9}
+.paper .mob{display:none}
+@media screen and (max-width:720px){
+main{padding:.5rem}
+.paper{outline:0;border-radius:2mm}
+.paper .band{padding:5mm 5mm 0}.paper .band img{height:9mm}
+.paper .band::after{width:34mm;height:15mm;right:-3mm}
+.paper .bandtitle{flex-direction:column;align-items:flex-start;gap:2mm;margin-top:4mm;padding:3mm 0 3.5mm}
+.paper .doc{font-size:5.6mm;letter-spacing:.1em}
+.paper .meta{text-align:left}
+.paper .bd{padding:4.5mm 4.5mm 3mm}
+.paper .parties{grid-template-columns:1fr;gap:3mm;margin-bottom:5mm}
+.paper .party{padding:2.5mm 4mm}
+.paper .pt .n,.paper .pt .hm{display:none}
+.paper .pt th:nth-child(2),.paper .pt td:nth-child(2){padding-left:0}
+.paper .pt td{padding:2.6mm 1mm}
+.paper .mob{display:block}
+.paper .totbox{width:100%}
+.paper .note{padding:3mm 4mm}
+.paper .foot{padding:4mm 5mm;line-height:1.6}
+.paper .foot::after{width:18mm}
+}
 @page{size:A4;margin:8mm}
 @media print{header.top,.noprint{display:none!important}body{background:#fff}main{max-width:none;padding:0}.paper{box-shadow:none;outline:0;max-width:none}}
 `;
@@ -461,8 +482,8 @@ function sheetHtml(o) {
 <div class="parties">
 <div class="party"><div class="lab">Kunde</div><b>${e(custName(c))}</b>${c.strasse || c.plz || c.ort ? `<div class="sm">${e(c.strasse || '')}${c.strasse ? '<br>' : ''}${e([c.plz, c.ort].filter(Boolean).join(' '))}</div>` : ''}</div>
 <div class="party"><div class="lab">Fahrzeug</div><b>${e(vehName(v))}</b>${v.motor ? `<div class="sm">${e(v.motor)}</div>` : ''}${v.kennzeichen ? `<span class="plate">${e(v.kennzeichen)}</span>` : ''}${v.fgnr ? `<div class="sm">VIN ${e(v.fgnr)}</div>` : ''}</div></div>
-<table class="pt"><thead><tr><th class="n">#</th><th>Position</th><th class="r">Menge</th><th class="r">Preis</th><th class="r">Total CHF</th></tr></thead><tbody>${sortiert(o.positionen)
-      .map((p, i) => `<tr><td class="n">${String(i + 1).padStart(2, '0')}</td><td><b>${e(p.label)}</b>${p.bez || p.nr ? `<div class="sub">${[p.bez ? e(p.bez) : '', p.nr ? 'Art.-Nr. ' + e(p.nr) : ''].filter(Boolean).join('  ·  ')}</div>` : ''}</td><td class="r">${p.menge}${p.unit ? ' ' + p.unit : ''}</td><td class="r">${chf(p.preis)}</td><td class="r">${chf(lineTotal(p))}</td></tr>`)
+<table class="pt"><thead><tr><th class="n">#</th><th>Position</th><th class="r hm">Menge</th><th class="r hm">Preis</th><th class="r">Total CHF</th></tr></thead><tbody>${sortiert(o.positionen)
+      .map((p, i) => `<tr><td class="n">${String(i + 1).padStart(2, '0')}</td><td><b>${e(p.label)}</b>${p.bez || p.nr ? `<div class="sub">${[p.bez ? e(p.bez) : '', p.nr ? 'Art.-Nr. ' + e(p.nr) : ''].filter(Boolean).join('  ·  ')}</div>` : ''}${p.menge !== 1 ? `<div class="sub mob">${p.menge}${p.unit ? ' ' + p.unit : ''} × ${chf(p.preis)}</div>` : ''}</td><td class="r hm">${p.menge}${p.unit ? ' ' + p.unit : ''}</td><td class="r hm">${chf(p.preis)}</td><td class="r">${chf(lineTotal(p))}</td></tr>`)
       .join('')}</tbody></table>
 <div class="totbox"><div class="ln"><span>Zwischensumme</span><span>${chf(t.sum)}</span></div>
 ${Math.abs(t.total - t.sum) > 0.001 ? `<div class="ln"><span>Rundung auf 5 Rp.</span><span>${chf(t.total - t.sum)}</span></div>` : ''}
