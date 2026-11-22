@@ -20,7 +20,7 @@ fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 // ---------- Daten ----------
 const DEFAULT_SETTINGS = {
   firma: 'LM Motorsport GmbH',
-  titel: 'Offerte',
+  titel: 'Auftragsübersicht',
   adresse: '',
   kontakt: '',
   mwst: 8.1,
@@ -408,31 +408,42 @@ f.addEventListener('input',calc);f.addEventListener('change',calc);calc();
 }
 
 const SHEET_CSS = `
-.paper{background:#fff;color:#16181c;max-width:210mm;margin:0 auto;font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 8px 40px #000a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.paper .band{background:#0b0c0e;color:#f5f5f3;padding:7mm 9mm;display:flex;align-items:center;justify-content:space-between;gap:1rem}
-.paper .band img{height:13mm;width:auto;display:block}
-.paper .doc{text-align:right;font:500 6.4mm Oswald,Impact,sans-serif;letter-spacing:.14em;text-transform:uppercase;line-height:1.1}
-.paper .doc small{display:block;font:400 3.3mm Inter,sans-serif;letter-spacing:.04em;color:#a7acb4;text-transform:none;margin-top:1.4mm}
-.paper .rule{height:1.3mm;background:linear-gradient(90deg,#f5f5f3,#8b9199 55%,#3a3d44)}
-.paper .bd{padding:8mm 9mm 7mm}
-.paper .parties{display:grid;grid-template-columns:1fr 1fr;gap:6mm;margin-bottom:8mm}
-.paper .party{border-left:1mm solid #8b9199;padding-left:4mm;line-height:1.5}
-.paper .lab{font:500 3mm Oswald,Impact,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#6b7078;margin-bottom:1mm}
-.paper .party b{font-size:4.3mm;font-weight:600}
-.paper table.pt{width:100%;border-collapse:collapse}
-.paper .pt th{background:#0b0c0e;color:#f5f5f3;font:500 3.1mm Oswald,Impact,sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:2.3mm 3mm;text-align:left;border:0}
-.paper .pt td{padding:2.7mm 3mm;border:0;border-bottom:.25mm solid #dcdfe3;vertical-align:top;color:#16181c}
-.paper .pt tbody tr:nth-child(even) td{background:#f4f5f6}
+.paper{background:#fff;color:#16181c;max-width:210mm;margin:0 auto;font:14px/1.45 Inter,system-ui,sans-serif;box-shadow:0 8px 40px #000a;outline:1px solid #2a2d33;-webkit-print-color-adjust:exact;print-color-adjust:exact;overflow:hidden}
+.paper *{box-sizing:border-box}
+.paper .band{position:relative;background:#0b0c0e;color:#f5f5f3;padding:7mm 11mm 0;overflow:hidden}
+.paper .band::after{content:'';position:absolute;top:0;right:-4mm;width:62mm;height:21mm;background:linear-gradient(113deg,transparent 0 24%,#e8eaed 24% 35%,transparent 35% 41%,#9aa0a8 41% 52%,transparent 52% 58%,#555a62 58% 69%,transparent 69%);opacity:.95}
+.paper .band img{height:13mm;width:auto;display:block;position:relative;z-index:1}
+.paper .bandtitle{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:6mm;margin-top:5mm;padding:3mm 0 3.5mm;border-top:.3mm solid #3a3d44}
+.paper .doc{font:500 7.6mm/1 Oswald,Impact,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#fff}
+.paper .meta{text-align:right;font:400 3.5mm Inter,sans-serif;color:#b5bac1;line-height:1.5}
+.paper .meta b{color:#fff;font-weight:600;letter-spacing:.04em}
+.paper .rule{height:1.4mm;background:linear-gradient(90deg,#f5f5f3,#8b9199 55%,#3a3d44)}
+.paper .bd{padding:6.5mm 11mm 4mm}
+.paper .parties{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-bottom:6mm}
+.paper .party{background:#f3f4f6;border-radius:1.6mm;padding:3mm 5mm;border-top:.9mm solid #8b9199;line-height:1.55}
+.paper .lab{font:500 2.9mm Oswald,Impact,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#6b7078;margin-bottom:1.6mm}
+.paper .party b{font-size:4.4mm;font-weight:600;color:#0b0c0e}
+.paper .party .sm{color:#4a4f57;font-size:3.5mm}
+.paper .plate{display:inline-block;border:.35mm solid #0b0c0e;border-radius:1mm;padding:.2mm 2mm;font:600 3.4mm Inter,sans-serif;letter-spacing:.12em;margin-top:1mm;background:#fff}
+.paper table.pt{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.paper .pt th{font:500 2.9mm Oswald,Impact,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#6b7078;padding:0 2mm 2.4mm;text-align:left;border:0;border-bottom:.5mm solid #0b0c0e;background:none}
+.paper .pt td{padding:2.1mm 2mm;border:0;border-bottom:.2mm solid #dcdfe3;vertical-align:top;color:#16181c}
+.paper .pt td.n{width:8mm;color:#9aa0a8;font:500 3.2mm Oswald,Impact,sans-serif;padding-left:0}
+.paper .pt th.n{width:8mm}
 .paper .pt .r{text-align:right;white-space:nowrap}
 .paper .pt tr{break-inside:avoid}
-.paper .sub{color:#6b7078;font-size:3.3mm}
-.paper .totbox{margin:6mm 0 0 auto;width:78mm;break-inside:avoid}
-.paper .totbox .ln{display:flex;justify-content:space-between;padding:.9mm 0;color:#6b7078;font-size:3.4mm}
-.paper .totbox .t{background:#0b0c0e;color:#f5f5f3;padding:3.2mm 4mm;margin-top:2mm;font:500 5.4mm Oswald,Impact,sans-serif;letter-spacing:.05em;display:flex;justify-content:space-between}
-.paper .note{margin-top:7mm;white-space:pre-line;border-left:1mm solid #dcdfe3;padding-left:4mm;color:#3a3d44}
-.paper .foot{margin:9mm 9mm 0;padding:3mm 0 7mm;border-top:.3mm solid #c9cdd2;color:#6b7078;font-size:3.1mm;display:flex;justify-content:space-between;gap:6mm;white-space:pre-line}
-@page{size:A4;margin:10mm}
-@media print{header.top,.noprint{display:none!important}body{background:#fff}main{max-width:none;padding:0}.paper{box-shadow:none;max-width:none}}
+.paper .pt td b{font-weight:600;font-size:3.9mm}
+.paper .sub{color:#6b7078;font-size:3.3mm;margin-top:.4mm}
+.paper .totbox{margin:5mm 0 0 auto;width:84mm;break-inside:avoid}
+.paper .totbox .ln{display:flex;justify-content:space-between;padding:.9mm 2mm;color:#6b7078;font-size:3.4mm}
+.paper .totbox .t{background:#0b0c0e;color:#fff;padding:3mm 5mm 3mm 9mm;margin-top:2.2mm;font:500 5.8mm Oswald,Impact,sans-serif;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:baseline;clip-path:polygon(5mm 0,100% 0,100% 100%,0 100%)}
+.paper .totbox .t span:first-child{font-size:3.6mm;letter-spacing:.2em;text-transform:uppercase;color:#c4c8ce}
+.paper .note{margin-top:5mm;white-space:pre-line;background:#f3f4f6;border-left:1mm solid #8b9199;border-radius:0 1.6mm 1.6mm 0;padding:3.4mm 5mm;color:#3a3d44;font-size:3.6mm}
+.paper .foot{position:relative;margin-top:6mm;background:#0b0c0e;color:#b5bac1;padding:4.6mm 11mm;font-size:3.1mm;letter-spacing:.03em;white-space:pre-line;overflow:hidden}
+.paper .foot b{color:#fff;font-weight:600}
+.paper .foot::after{content:'';position:absolute;top:0;right:-3mm;width:34mm;height:100%;background:linear-gradient(113deg,transparent 0 28%,#9aa0a8 28% 44%,transparent 44% 52%,#555a62 52% 68%,transparent 68%);opacity:.9}
+@page{size:A4;margin:8mm}
+@media print{header.top,.noprint{display:none!important}body{background:#fff}main{max-width:none;padding:0}.paper{box-shadow:none;outline:0;max-width:none}}
 `;
 
 function sheetHtml(o) {
@@ -440,17 +451,18 @@ function sheetHtml(o) {
   const c = db.customers.find((x) => x.id === o.customerId);
   const t = totals(o.positionen);
   const s = db.settings;
-  const foot = [s.firma, s.adresse.replace(/\n+/g, ', '), s.kontakt].filter(Boolean).join('  ·  ');
+  const adr = s.adresse.replace(/\n+/g, ', ');
   return `<style>${SHEET_CSS}</style>
 <div class="paper">
-<div class="band"><img src="/assets/logo.png" alt="${e(s.firma)}"><div class="doc">${e(s.titel)}<small>Nr. ${e(o.nr)} · ${datum(o.datum)}</small></div></div>
+<div class="band"><img src="/assets/logo.png" alt="${e(s.firma)}">
+<div class="bandtitle"><div class="doc">${e(s.titel)}</div><div class="meta"><b>Nr. ${e(o.nr)}</b><br>${datum(o.datum)}${o.km ? ' · ' + e(o.km) + ' km' : ''}</div></div></div>
 <div class="rule"></div>
 <div class="bd">
 <div class="parties">
-<div class="party"><div class="lab">Kunde</div><b>${e(custName(c))}</b><br>${e(c.strasse || '')}${c.strasse ? '<br>' : ''}${e([c.plz, c.ort].filter(Boolean).join(' '))}</div>
-<div class="party"><div class="lab">Fahrzeug</div><b>${e(vehName(v))}</b>${v.motor ? '<br>' + e(v.motor) : ''}${v.kennzeichen ? '<br>Kontrollschild ' + e(v.kennzeichen) : ''}${v.fgnr ? '<br>VIN ' + e(v.fgnr) : ''}${o.km ? '<br>' + e(o.km) + ' km' : ''}</div></div>
-<table class="pt"><thead><tr><th>Position</th><th class="r">Menge</th><th class="r">Preis</th><th class="r">Total CHF</th></tr></thead><tbody>${sortiert(o.positionen)
-      .map((p) => `<tr><td><b>${e(p.label)}</b>${p.bez ? '<div class="sub">' + e(p.bez) + '</div>' : ''}${p.nr ? `<div class="sub">Art.-Nr. ${e(p.nr)}</div>` : ''}</td><td class="r">${p.menge}${p.unit ? ' ' + p.unit : ''}</td><td class="r">${chf(p.preis)}</td><td class="r">${chf(lineTotal(p))}</td></tr>`)
+<div class="party"><div class="lab">Kunde</div><b>${e(custName(c))}</b>${c.strasse || c.plz || c.ort ? `<div class="sm">${e(c.strasse || '')}${c.strasse ? '<br>' : ''}${e([c.plz, c.ort].filter(Boolean).join(' '))}</div>` : ''}</div>
+<div class="party"><div class="lab">Fahrzeug</div><b>${e(vehName(v))}</b>${v.motor ? `<div class="sm">${e(v.motor)}</div>` : ''}${v.kennzeichen ? `<span class="plate">${e(v.kennzeichen)}</span>` : ''}${v.fgnr ? `<div class="sm">VIN ${e(v.fgnr)}</div>` : ''}</div></div>
+<table class="pt"><thead><tr><th class="n">#</th><th>Position</th><th class="r">Menge</th><th class="r">Preis</th><th class="r">Total CHF</th></tr></thead><tbody>${sortiert(o.positionen)
+      .map((p, i) => `<tr><td class="n">${String(i + 1).padStart(2, '0')}</td><td><b>${e(p.label)}</b>${p.bez || p.nr ? `<div class="sub">${[p.bez ? e(p.bez) : '', p.nr ? 'Art.-Nr. ' + e(p.nr) : ''].filter(Boolean).join('  ·  ')}</div>` : ''}</td><td class="r">${p.menge}${p.unit ? ' ' + p.unit : ''}</td><td class="r">${chf(p.preis)}</td><td class="r">${chf(lineTotal(p))}</td></tr>`)
       .join('')}</tbody></table>
 <div class="totbox"><div class="ln"><span>Zwischensumme</span><span>${chf(t.sum)}</span></div>
 ${Math.abs(t.total - t.sum) > 0.001 ? `<div class="ln"><span>Rundung auf 5 Rp.</span><span>${chf(t.total - t.sum)}</span></div>` : ''}
@@ -458,7 +470,7 @@ ${Math.abs(t.total - t.sum) > 0.001 ? `<div class="ln"><span>Rundung auf 5 Rp.</
 <div class="ln" style="margin-top:1.5mm"><span>inkl. ${s.mwst}% MWST</span><span>${chf(t.mwstBetrag)}</span></div></div>
 ${o.notiz ? `<div class="note">${e(o.notiz)}</div>` : ''}
 </div>
-<div class="foot">${e(foot)}</div></div>`;
+<div class="foot"><b>${e(s.firma)}</b>${[adr, s.kontakt].filter(Boolean).map((x) => '  ·  ' + e(x)).join('')}</div></div>`;
 }
 
 function offerPage(o, origin) {
@@ -601,7 +613,7 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'GET') return send(res, 200, settingsPage());
       const form = await getForm();
       const s = db.settings;
-      for (const k of ['firma', 'titel', 'adresse', 'kontakt']) s[k] = (form.get(k) || '').trim() || (k === 'titel' ? 'Offerte' : '');
+      for (const k of ['firma', 'titel', 'adresse', 'kontakt']) s[k] = (form.get(k) || '').trim() || (k === 'titel' ? 'Auftragsübersicht' : '');
       for (const k of ['mwst', 'arbeit', 'entsorgung', 'reifenmontage', 'bremsfluessigkeit']) s[k] = num(form.get(k));
           save();
       return send(res, 200, settingsPage('Gespeichert.'));
