@@ -189,9 +189,15 @@ function buildOffer(form, vehicle) {
     const b = get(`frei_bez_${i}`).trim();
     if (b) positionen.push({ key: 'frei', label: b, bez: get(`frei_info_${i}`).trim(), nr: get(`frei_nr_${i}`).trim(), menge: num(get(`frei_menge_${i}`), 1), unit: '', preis: num(get(`frei_preis_${i}`)) });
   }
-  return positionen;
+  return sortiert(positionen);
 }
 const parseDatum = (d) => (/^\d{4}-\d{2}-\d{2}$/.test(d || '') ? new Date(`${d}T12:00:00`).toISOString() : new Date().toISOString());
+// Reihenfolge auf dem Beleg: Teile, eigene Positionen, Reifenmontage, Entsorgung, zuletzt Arbeitsaufwand
+const RANG = { frei: 100, reifen: 110, entsorgung: 120, arbeit: 130 };
+const sortiert = (ps) => {
+  const rang = (p) => { const i = TEILE.findIndex((t) => t.k === p.key); return i >= 0 ? i : RANG[p.key] ?? 200; };
+  return ps.map((p, i) => [p, i]).sort((a, b) => rang(a[0]) - rang(b[0]) || a[1] - b[1]).map((x) => x[0]);
+};
 const lineTotal = (p) => Math.round(p.menge * p.preis * 100) / 100;
 function totals(positionen) {
   const sum = positionen.reduce((a, p) => a + lineTotal(p), 0);
@@ -443,7 +449,7 @@ function sheetHtml(o) {
 <div class="parties">
 <div class="party"><div class="lab">Kunde</div><b>${e(custName(c))}</b><br>${e(c.strasse || '')}${c.strasse ? '<br>' : ''}${e([c.plz, c.ort].filter(Boolean).join(' '))}</div>
 <div class="party"><div class="lab">Fahrzeug</div><b>${e(vehName(v))}</b>${v.motor ? '<br>' + e(v.motor) : ''}${v.kennzeichen ? '<br>Kontrollschild ' + e(v.kennzeichen) : ''}${v.fgnr ? '<br>VIN ' + e(v.fgnr) : ''}${o.km ? '<br>' + e(o.km) + ' km' : ''}</div></div>
-<table class="pt"><thead><tr><th>Position</th><th class="r">Menge</th><th class="r">Preis</th><th class="r">Total CHF</th></tr></thead><tbody>${o.positionen
+<table class="pt"><thead><tr><th>Position</th><th class="r">Menge</th><th class="r">Preis</th><th class="r">Total CHF</th></tr></thead><tbody>${sortiert(o.positionen)
       .map((p) => `<tr><td><b>${e(p.label)}</b>${p.bez ? '<div class="sub">' + e(p.bez) + '</div>' : ''}${p.nr ? `<div class="sub">Art.-Nr. ${e(p.nr)}</div>` : ''}</td><td class="r">${p.menge}${p.unit ? ' ' + p.unit : ''}</td><td class="r">${chf(p.preis)}</td><td class="r">${chf(lineTotal(p))}</td></tr>`)
       .join('')}</tbody></table>
 <div class="totbox"><div class="ln"><span>Zwischensumme</span><span>${chf(t.sum)}</span></div>
