@@ -72,9 +72,12 @@ const datum = (iso) => new Date(iso).toLocaleDateString('de-CH', { timeZone: 'Eu
 const custName = (c) => (c ? `${c.vorname} ${c.name}`.trim() : '—');
 const vehName = (v) => (v ? `${v.marke} ${v.typ}`.trim() : '—');
 const ausweisListe = (v) => v.ausweise || (v.ausweis ? [v.ausweis] : []);
-const letzterService = (v) => (v.services && v.services.length ? v.services[v.services.length - 1] : null);
-const serviceForm = (v, { q = '', back = '' } = {}) =>
-  `<form method="post" action="/fahrzeug/${v.id}/service-erledigt" style="display:inline;margin:0" onsubmit="return confirm('Service als heute erledigt eintragen?')"><input type="hidden" name="q" value="${e(q)}"><input type="hidden" name="back" value="${back}"><button class="sec" style="padding:.2rem .6rem">Service erledigt</button></form>`;
+// Verdienst eines Belegs: nur Arbeitsaufwand pauschal, Reifenmontage, Bremsflüssigkeit (alles andere ist Einkauf)
+const VERDIENST_KEYS = ['arbeit', 'reifen', 'bremsfl'];
+const verdienst = (o) => o.positionen.filter((p) => VERDIENST_KEYS.includes(p.key)).reduce((a, p) => a + lineTotal(p), 0);
+const erledigtDatum = (o) => (o.status === 'Erledigt' ? o.erledigtAm || o.datum : null);
+const letzterService = (v) =>
+  db.offers.filter((o) => o.vehicleId === v.id && erledigtDatum(o)).sort((a, b) => erledigtDatum(b).localeCompare(erledigtDatum(a)))[0] || null;
 const autodoc = (v, label) =>
   `https://www.autodoc.ch/search?keyword=${encodeURIComponent(`${v.marke} ${v.typ} ${label}`)}`;
 
@@ -237,12 +240,23 @@ function dashboard(q) {
       return `${c.vorname} ${c.name} ${c.ort || ''} ${vs}`.toLowerCase().includes(ql);
     })
     .sort((a, b) => a.name.localeCompare(b.name));
+  const heute = todayZh();
   const rows = list
-    .map((c) => {
+    .flatMap((c) => {
       const vs = db.vehicles.filter((v) => v.customerId === c.id);
-      return `<tr><td><a href="/kunde/${c.id}"><b>${e(custName(c))}</b></a><div class="muted small">${e([c.plz, c.ort].filter(Boolean).join(' '))}</div></td>
-<td>${vs.map((v) => { const ls = letzterService(v); return `<div style="margin:.2rem 0"><a href="/fahrzeug/${v.id}">${e(vehName(v))}</a>${v.kennzeichen ? ` <span class="muted small">${e(v.kennzeichen)}</span>` : ''}
-<span class="muted small">${ls ? 'Letzter Service: <b>' + datum(ls) + '</b>' : 'Noch kein Service eingetragen'}</span> ${serviceForm(v, { q })}</div>`; }).join('') || '<span class="muted">—</span>'}</td></tr>`;
+      const cust = `<a href="/kunde/${c.id}"><b>${e(custName(c))}</b></a><div class="muted small">${e([c.plz, c.ort].filter(Boolean).join(' '))}</div>`;
+      if (!vs.length) return [`<tr><td>${cust}</td><td class="muted">—</td><td></td><td></td></tr>`];
+      return vs.map((v, i) => {
+        const ls = letzterService(v);
+        const offen = db.offers.filter((o) => o.vehicleId === v.id && !['Erledigt', 'Abgelehnt'].includes(o.status)).sort((a, b) => b.datum.localeCompare(a.datum));
+        const aktion = offen.length
+          ? `<form method="post" action="/fahrzeug/${v.id}/service-erledigt" class="row" style="gap:.4rem;margin:0"><input type="hidden" name="q" value="${e(q)}">
+<input type="date" name="datum" value="${heute}" style="width:auto">${offen.length > 1 ? `<select name="offer" style="width:auto">${offen.map((o) => `<option value="${o.id}">${e(o.nr)}</option>`).join('')}</select>` : `<input type="hidden" name="offer" value="${offen[0].id}">`}<button class="sec" style="padding:.3rem .7rem">Erledigt</button></form>`
+          : '';
+        return `<tr><td>${i === 0 ? cust : ''}</td>
+<td><a href="/fahrzeug/${v.id}">${e(vehName(v))}</a>${v.kennzeichen ? ` <span class="muted small">${e(v.kennzeichen)}</span>` : ''}</td>
+<td>${ls ? `${datum(erledigtDatum(ls))} · CHF ${chf(verdienst(ls))}` : ''}</td><td>${aktion}</td></tr>`;
+      });
     })
     .join('');
   const recent = [...db.offers].sort((a, b) => b.datum.localeCompare(a.datum)).slice(0, 5);
@@ -250,7 +264,7 @@ function dashboard(q) {
     'Kunden',
     `<div class="row"><h1 style="margin-right:auto">Kunden</h1><a class="btn" href="/kunde/neu">+ Neuer Kunde</a></div>
 <form class="row" method="get" style="margin-bottom:1rem"><input name="q" value="${e(q)}" placeholder="Suche: Name, Ort, Marke, Kennzeichen" style="max-width:420px"><button class="sec">Suchen</button></form>
-<div class="card"><table><tr><th>Kunde</th><th>Fahrzeuge</th></tr>${rows || '<tr><td colspan="2" class="muted">Noch keine Kunden.</td></tr>'}</table></div>
+<div class="card"><table><tr><th>Kunde</th><th>Fahrzeug</th><th>Letzter Service</th><th></th></tr>${rows || '<tr><td colspan="4" class="muted">Noch keine Kunden.</td></tr>'}</table></div>
 ${recent.length ? `<h2>Letzte Offerten</h2>${offerTable(recent)}` : ''}`
   );
 }
@@ -329,9 +343,6 @@ ${f.endsWith('.pdf') ? `<a href="/datei/${e(f)}" target="_blank">PDF öffnen</a>
     `<div class="row"><h1 style="margin-right:auto">${e(vehName(v))} <span class="muted" style="font-size:1rem">${e(v.kennzeichen)}</span></h1>
 <a class="btn" href="/fahrzeug/${v.id}/offerte">+ Neue Offerte</a></div>
 <p>Kunde: <a href="/kunde/${c.id}">${e(custName(c))}</a>${c.tel ? ` · ${e(c.tel)}` : ''}</p>
-<div class="card"><div class="row"><b>Service erledigt</b> ${serviceForm(v, { back: 'fahrzeug' })}
-${(v.services || []).length ? `<form method="post" action="/fahrzeug/${v.id}/service-zurueck" style="display:inline;margin:0" onsubmit="return confirm('Letzten Eintrag entfernen?')"><button class="del" style="padding:.2rem .6rem">letzten Eintrag entfernen</button></form>` : ''}</div>
-<div class="muted small" style="margin-top:.4rem">${(v.services || []).length ? [...v.services].reverse().map((d) => datum(d)).join(' · ') : 'Noch kein Service eingetragen.'}</div></div>
 ${vehicleForm(v, c, `/fahrzeug/${v.id}`)}
 <h2>Fahrzeugausweis</h2><div class="card">${ausweis}
 <div class="row"><input type="file" id="f" accept="image/*,application/pdf" multiple style="max-width:360px"> <button class="sec" type="button" onclick="up()">Hochladen</button>
@@ -689,14 +700,10 @@ const server = http.createServer(async (req, res) => {
       }
       if (sub === 'service-erledigt' && req.method === 'POST') {
         const f = await getForm();
-        v.services = [...(v.services || []), new Date().toISOString()]; save();
-        if (f.get('back') === 'fahrzeug') return redirect(res, `/fahrzeug/${v.id}`);
+        const o = db.offers.find((x) => x.id === f.get('offer') && x.vehicleId === v.id);
+        if (o) { o.status = 'Erledigt'; o.erledigtAm = parseDatum(f.get('datum')); save(); }
         const q = f.get('q') || '';
         return redirect(res, q ? `/?q=${encodeURIComponent(q)}` : '/');
-      }
-      if (sub === 'service-zurueck' && req.method === 'POST') {
-        v.services = (v.services || []).slice(0, -1); save();
-        return redirect(res, `/fahrzeug/${v.id}`);
       }
       if (sub === 'loeschen' && req.method === 'POST') {
         if (!db.offers.some((o) => o.vehicleId === v.id)) { db.vehicles = db.vehicles.filter((x) => x.id !== v.id); save(); return redirect(res, `/kunde/${v.customerId}`); }
