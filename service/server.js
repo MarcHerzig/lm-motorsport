@@ -74,7 +74,8 @@ const vehName = (v) => (v ? `${v.marke} ${v.typ}`.trim() : '—');
 const ausweisListe = (v) => v.ausweise || (v.ausweis ? [v.ausweis] : []);
 // Verdienst eines Belegs: nur Arbeitsaufwand pauschal, Reifenmontage, Bremsflüssigkeit (alles andere ist Einkauf)
 const VERDIENST_KEYS = ['arbeit', 'reifen', 'bremsfl'];
-const verdienst = (o) => o.positionen.filter((p) => VERDIENST_KEYS.includes(p.key)).reduce((a, p) => a + lineTotal(p), 0);
+// Bremsflüssigkeit pauschal: Preis einmal, unabhängig von der Menge in Litern
+const verdienst = (o) => o.positionen.filter((p) => VERDIENST_KEYS.includes(p.key)).reduce((a, p) => a + (p.key === 'bremsfl' ? p.preis : lineTotal(p)), 0);
 const erledigtDatum = (o) => (o.status === 'Erledigt' ? o.erledigtAm || o.datum : null);
 const letzterService = (v) =>
   db.offers.filter((o) => o.vehicleId === v.id && erledigtDatum(o)).sort((a, b) => erledigtDatum(b).localeCompare(erledigtDatum(a)))[0] || null;
